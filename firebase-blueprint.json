@@ -1,0 +1,31 @@
+{
+  "entities": {
+    "card": {
+      "title": "Birthday Card",
+      "description": "Shortened birthday card interactive sharing state",
+      "type": "object",
+      "properties": {
+        "recipientName": { "type": "string" },
+        "recipientAge": { "type": "string" },
+        "relationship": { "type": "string" },
+        "theme": { "type": "string" },
+        "music": { "type": "string" },
+        "interactiveChallenge": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "customMessage": { "type": "string" },
+        "poem": { "type": "string" },
+        "giftClue": { "type": "string" },
+        "shortQuote": { "type": "string" },
+        "cakeType": { "type": "string" },
+        "interests": { "type": "string" }
+      },
+      "required": ["recipientName"]
+    }
+  },
+  "firestore": {
+    "/cards/{cardId}": {
+      "schema": "card",
+      "description": "Collection of shortened birthday greeting cards"
+    }
+  }
+}

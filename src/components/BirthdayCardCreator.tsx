@@ -145,7 +145,17 @@ export default function BirthdayCardCreator() {
     }
   };
 
-  // Triggers final shareable link construction via server-side database shortening
+  // Helper to generate a random 6-character short code for client-side Firestore
+  const generateClientShortId = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let id = "";
+    for (let i = 0; i < 6; i++) {
+      id += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return id;
+  };
+
+  // Triggers final shareable link construction via serverless database shortening
   const handleGenerateLink = async () => {
     if (!formState.recipientName) {
       setGenerateLinkError("Please provide a Recipient Name before creating your card!");
@@ -157,36 +167,69 @@ export default function BirthdayCardCreator() {
     setGeneratedLink(null);
 
     try {
-      const response = await fetch("/api/cards", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formState),
-      });
+      // 1. Primary path: Attempt high-performance Direct client-side Firestore storage (Fully compatible with Vercel)
+      const { doc, setDoc, getDoc } = await import("firebase/firestore");
+      const { db } = await import("../lib/firebase");
 
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        throw new Error(errJson.error || "Backend database storage failed");
+      let shortId = "";
+      let attempts = 0;
+      let isUnique = false;
+
+      while (!isUnique && attempts < 5) {
+        shortId = generateClientShortId();
+        const docRef = doc(db, "cards", shortId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          isUnique = true;
+        }
+        attempts++;
       }
 
-      const data = await response.json();
-      if (data && data.id) {
-        // Form extremely elegant, direct shorter URL link
-        const absoluteUrl = `${window.location.origin}/?c=${data.id}`;
-        setGeneratedLink(absoluteUrl);
-      } else {
-        throw new Error("Invalid id payload received from card server");
+      if (!isUnique) {
+        throw new Error("Failed to generate a unique short code. Please try again.");
       }
-    } catch (err: any) {
-      console.warn("Backend shortener failed, falling back to full offline URL parameters", err);
-      // Fallback: Use standard Base64 encoding parameters (safe & works without internet too)
-      const encodedStr = encodeCardState(formState);
-      if (encodedStr) {
-        const absoluteUrl = `${window.location.origin}/?card=${encodedStr}`;
-        setGeneratedLink(absoluteUrl);
-      } else {
-        setGenerateLinkError("Could not build interactive gift link. Please check recipient parameters details.");
+
+      const finalDocRef = doc(db, "cards", shortId);
+      await setDoc(finalDocRef, formState);
+
+      const absoluteUrl = `${window.location.origin}/?c=${shortId}`;
+      setGeneratedLink(absoluteUrl);
+    } catch (firebaseErr: any) {
+      console.warn("Client-side Firestore write failed, trying fallback to Node Express server...", firebaseErr);
+      
+      try {
+        // 2. Secondary path: Fallback backend Express custom database server (for local developer server)
+        const response = await fetch("/api/cards", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formState),
+        });
+
+        if (!response.ok) {
+          const errJson = await response.json().catch(() => ({}));
+          throw new Error(errJson.error || "Backend database storage failed");
+        }
+
+        const data = await response.json();
+        if (data && data.id) {
+          // Form extremely elegant, direct shorter URL link
+          const absoluteUrl = `${window.location.origin}/?c=${data.id}`;
+          setGeneratedLink(absoluteUrl);
+        } else {
+          throw new Error("Invalid id payload received from card server");
+        }
+      } catch (err: any) {
+        console.warn("Backend shortener failed, falling back to full offline URL parameters", err);
+        // 3. Last resort fallback: Standard offline Base64 encoding parameters (safe & requires no network)
+        const encodedStr = encodeCardState(formState);
+        if (encodedStr) {
+          const absoluteUrl = `${window.location.origin}/?card=${encodedStr}`;
+          setGeneratedLink(absoluteUrl);
+        } else {
+          setGenerateLinkError("Could not build interactive gift link. Please check recipient parameters details.");
+        }
       }
     } finally {
       setIsGeneratingLink(false);

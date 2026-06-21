@@ -18,13 +18,25 @@ export default function App() {
 
       if (shortId) {
         try {
-          const res = await fetch(`/api/cards/${shortId}`);
-          if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            throw new Error(errJson.error || "The requested short greeting card could not be found.");
+          // Attempt client-side loading from Google Cloud Firestore directly
+          const { doc, getDoc } = await import("firebase/firestore");
+          const { db } = await import("./lib/firebase");
+          
+          const docRef = doc(db, "cards", shortId);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            setSharedCardState(docSnap.data() as BirthdayCardState);
+          } else {
+            // Fallback: If client-side failed, maybe let's pull from Express /api/cards endpoint (precautionary)
+            const res = await fetch(`/api/cards/${shortId}`);
+            if (!res.ok) {
+              const errJson = await res.json().catch(() => ({}));
+              throw new Error(errJson.error || "The requested short greeting card could not be found.");
+            }
+            const cardData = await res.json();
+            setSharedCardState(cardData);
           }
-          const cardData = await res.json();
-          setSharedCardState(cardData);
         } catch (err: any) {
           console.error("Failed to load shortened card:", err);
           setErrorMsg(err.message || "Failed to load shortened greeting card.");
