@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { BirthdayCardState, SuggestionParams, BirthdayTheme, MusicChoice, InteractiveChallenge, CakeType } from "../types";
 import { encodeCardState, AVATAR_OPTIONS } from "../utils/sharing";
-import { Sparkles, Gift, Music, Copy, Share2, ExternalLink, RefreshCw, Check, AlertCircle, Heart, Star, Send, Trash2 } from "lucide-react";
+import { Sparkles, Gift, Music, Copy, Share2, ExternalLink, RefreshCw, Check, AlertCircle, Heart, Star, Send, Trash2, Upload } from "lucide-react";
 import BirthdayCardViewer from "./BirthdayCardViewer";
 
 export default function BirthdayCardCreator() {
@@ -27,10 +27,60 @@ export default function BirthdayCardCreator() {
   const [aiLoading, setAiLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
 
   // 3. Generated Share State
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Handler to compress, square-crop, and resize uploaded image on the fly
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setImageUploadError("Please upload a valid image file (PNG/JPG).");
+      return;
+    }
+
+    setImageUploadError(null);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        
+        // 120x120px delivers premium viewing clarity while staying extremely lightweight (~4-8KB)
+        const size = 120;
+        canvas.width = size;
+        canvas.height = size;
+        
+        if (ctx) {
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+          
+          try {
+            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.65);
+            setFormState((prev) => ({
+              ...prev,
+              avatarUrl: compressedDataUrl,
+            }));
+          } catch (err) {
+            console.error("Image compression error:", err);
+            setImageUploadError("Failed to convert image. Please try a different photo.");
+          }
+        }
+      };
+      img.onerror = () => {
+        setImageUploadError("Failed to load selected image.");
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Loading quotes for funny AI progress spinner
   const loadingSteps = [
@@ -250,33 +300,106 @@ export default function BirthdayCardCreator() {
             {/* AVATAR CHOOSER */}
             <div>
               <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Recipient Cute Avatar</label>
-              <div className="grid grid-cols-6 gap-2 mb-3">
-                {AVATAR_OPTIONS.map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    title={a.name}
-                    onClick={() => setFormState({ ...formState, avatarUrl: a.id })}
-                    className={`p-3 rounded-2xl border text-2xl text-center cursor-pointer transition-all ${
-                      formState.avatarUrl === a.id
-                        ? "bg-slate-900 border-indigo-500 scale-105 shadow-md"
-                        : "bg-slate-50 dark:bg-slate-950 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <span>{a.emoji}</span>
-                  </button>
-                ))}
-              </div>
               
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Or Paste Custom Image URL</label>
-                <input
-                  type="url"
-                  placeholder="e.g. https://images.unsplash.com/photo-..."
-                  value={formState.avatarUrl.includes("http") ? formState.avatarUrl : ""}
-                  onChange={(e) => setFormState({ ...formState, avatarUrl: e.target.value || "kitty" })}
-                  className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg text-slate-850 dark:text-slate-100 text-xs focus:outline-indigo-500"
-                />
+              {/* Preset Emojis */}
+              <div className="grid grid-cols-6 gap-2 mb-4">
+                {AVATAR_OPTIONS.map((a) => {
+                  const isSelected = formState.avatarUrl === a.id;
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      title={a.name}
+                      onClick={() => {
+                        setImageUploadError(null);
+                        setFormState({ ...formState, avatarUrl: a.id });
+                      }}
+                      className={`p-3 rounded-2xl border text-2xl text-center cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-slate-900 border-indigo-500 scale-105 shadow-md text-white"
+                          : "bg-slate-50 dark:bg-slate-950 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>{a.emoji}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Upload Image Section */}
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase tracking-wider">Photo & Custom Media</span>
+                  {formState.avatarUrl.startsWith("data:") && (
+                    <button
+                      type="button"
+                      onClick={() => setFormState({ ...formState, avatarUrl: "kitty" })}
+                      className="text-[10px] text-rose-500 font-bold uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove Uploaded</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  {/* Avatar Preview */}
+                  <div className="w-16 h-16 rounded-2xl border-2 border-indigo-500 overflow-hidden bg-slate-200 dark:bg-slate-900 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    {formState.avatarUrl.startsWith("data:") ? (
+                      <img
+                        src={formState.avatarUrl}
+                        alt="Uploaded Avatar"
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : formState.avatarUrl.includes("http") ? (
+                      <img
+                        src={formState.avatarUrl}
+                        alt="Custom Link"
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="text-3xl">
+                        {AVATAR_OPTIONS.find((a) => a.id === formState.avatarUrl)?.emoji || "🐱"}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <label className="relative flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 rounded-xl cursor-pointer bg-white dark:bg-slate-905 transition-colors">
+                      <Upload className="w-4 h-4 text-indigo-500" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Upload custom photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-[10px] text-slate-400 font-light">
+                      JPG/PNG supported. Automatically optimized to center square for direct sharing link.
+                    </p>
+                  </div>
+                </div>
+
+                {imageUploadError && (
+                  <p className="text-xs text-rose-500 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>{imageUploadError}</span>
+                  </p>
+                )}
+
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Or Paste Custom Image Link URL Instead</label>
+                  <input
+                    type="url"
+                    placeholder="e.g. https://images.unsplash.com/photo-..."
+                    value={formState.avatarUrl.includes("http") && !formState.avatarUrl.startsWith("data:") ? formState.avatarUrl : ""}
+                    onChange={(e) => setFormState({ ...formState, avatarUrl: e.target.value || "kitty" })}
+                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg text-slate-850 dark:text-slate-100 text-xs focus:outline-indigo-500"
+                  />
+                </div>
               </div>
             </div>
           </div>
