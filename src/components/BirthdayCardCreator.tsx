@@ -32,6 +32,8 @@ export default function BirthdayCardCreator() {
   // 3. Generated Share State
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [generateLinkError, setGenerateLinkError] = useState<string | null>(null);
 
   // Handler to compress, square-crop, and resize uploaded image on the fly
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,14 +145,53 @@ export default function BirthdayCardCreator() {
     }
   };
 
-  // Triggers final shareable link construction
-  const handleGenerateLink = () => {
-    const encodedStr = encodeCardState(formState);
-    if (!encodedStr) return;
-    
-    const absoluteUrl = `${window.location.origin}/?card=${encodedStr}`;
-    setGeneratedLink(absoluteUrl);
-    setCopied(false);
+  // Triggers final shareable link construction via server-side database shortening
+  const handleGenerateLink = async () => {
+    if (!formState.recipientName) {
+      setGenerateLinkError("Please provide a Recipient Name before creating your card!");
+      return;
+    }
+
+    setIsGeneratingLink(true);
+    setGenerateLinkError(null);
+    setGeneratedLink(null);
+
+    try {
+      const response = await fetch("/api/cards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formState),
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.error || "Backend database storage failed");
+      }
+
+      const data = await response.json();
+      if (data && data.id) {
+        // Form extremely elegant, direct shorter URL link
+        const absoluteUrl = `${window.location.origin}/?c=${data.id}`;
+        setGeneratedLink(absoluteUrl);
+      } else {
+        throw new Error("Invalid id payload received from card server");
+      }
+    } catch (err: any) {
+      console.warn("Backend shortener failed, falling back to full offline URL parameters", err);
+      // Fallback: Use standard Base64 encoding parameters (safe & works without internet too)
+      const encodedStr = encodeCardState(formState);
+      if (encodedStr) {
+        const absoluteUrl = `${window.location.origin}/?card=${encodedStr}`;
+        setGeneratedLink(absoluteUrl);
+      } else {
+        setGenerateLinkError("Could not build interactive gift link. Please check recipient parameters details.");
+      }
+    } finally {
+      setIsGeneratingLink(false);
+      setCopied(false);
+    }
   };
 
   const copyToClipboard = () => {
@@ -631,15 +672,30 @@ export default function BirthdayCardCreator() {
               <span>Unleash Your Interactive Surprise!</span>
             </h3>
             <p className="text-xs font-light text-rose-100 max-w-sm mx-auto leading-relaxed">
-              We compile your entire customized design state into a beautiful secure URL key. Send this message to anyone on WhatsApp, Messenger, or email directly!
+              We generate a short sharing URL loaded with your customized details and uploaded high-clarity photo! Send this beautiful surprise instantly.
             </p>
 
             <button
               onClick={handleGenerateLink}
-              className="w-full bg-white text-rose-600 font-extrabold hover:bg-rose-50 active:scale-95 py-3.5 px-6 rounded-2xl shadow-md transition-all cursor-pointer text-sm"
+              disabled={isGeneratingLink}
+              className="w-full bg-white disabled:opacity-75 text-rose-600 font-black hover:bg-rose-50 active:scale-95 py-3.5 px-6 rounded-2xl shadow-md transition-all cursor-pointer text-sm uppercase tracking-wide flex items-center justify-center gap-2"
             >
-              GENERATE INDIVIDUALIZED GIFT LINK
+              {isGeneratingLink ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-rose-500" />
+                  <span>Shrinking Custom URL Card...</span>
+                </>
+              ) : (
+                <span>GENERATE SHORT GREETING LINK</span>
+              )}
             </button>
+
+            {generateLinkError && (
+              <div className="bg-white/10 border border-white/20 p-2.5 rounded-xl text-xs text-white flex items-center gap-1.5 justify-center">
+                <AlertCircle className="w-4 h-4 text-white" />
+                <span>{generateLinkError}</span>
+              </div>
+            )}
           </div>
 
           {/* LINK REVEAL MODAL PREVIEW */}

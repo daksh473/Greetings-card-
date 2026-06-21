@@ -114,6 +114,92 @@ The response should be standard JSON matching the requested schema. Provide cust
   }
 });
 
+// === SERVER-SIDE PERSISTENT CARD SHORTENER DATABASE ===
+import fs from "fs";
+
+const DB_FILE = path.join(process.cwd(), "cards_db.json");
+const cardsCache = new Map<string, any>();
+
+function generateShortId(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let id = "";
+  for (let i = 0; i < 6; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+}
+
+function loadCardsDB() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const raw = fs.readFileSync(DB_FILE, "utf-8");
+      const data = JSON.parse(raw);
+      for (const [key, value] of Object.entries(data)) {
+        cardsCache.set(key, value);
+      }
+      console.log(`Loaded ${cardsCache.size} shortened cards from database storage.`);
+    }
+  } catch (error) {
+    console.error("Error loading cards database file:", error);
+  }
+}
+
+function saveCardToDB(id: string, cardState: any) {
+  cardsCache.set(id, cardState);
+  try {
+    const rawObj: Record<string, any> = {};
+    for (const [key, val] of cardsCache.entries()) {
+      rawObj[key] = val;
+    }
+    fs.writeFileSync(DB_FILE, JSON.stringify(rawObj, null, 2), "utf-8");
+  } catch (error) {
+    console.error("Error writing to cards database file:", error);
+  }
+}
+
+// Trigger initial load on server boot-up
+loadCardsDB();
+
+// API endpoint to store custom card and return randomized shortId
+app.post("/api/cards", (req, res) => {
+  try {
+    const cardState = req.body;
+    if (!cardState || !cardState.recipientName) {
+      res.status(400).json({ error: "Invalid birthday card state" });
+      return;
+    }
+
+    let shortId = generateShortId();
+    while (cardsCache.has(shortId)) {
+      shortId = generateShortId();
+    }
+
+    saveCardToDB(shortId, cardState);
+    res.json({ id: shortId });
+  } catch (err: any) {
+    console.error("Error storing card in database:", err);
+    res.status(500).json({ error: "Failed to create short sharing card link" });
+  }
+});
+
+// API endpoint to lookup and retrieve card state by shortId
+app.get("/api/cards/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    const cardState = cardsCache.get(id);
+    
+    if (!cardState) {
+      res.status(404).json({ error: "Birthday card not found or has expired!" });
+      return;
+    }
+    
+    res.json(cardState);
+  } catch (err: any) {
+    console.error("Error retrieving card from database:", err);
+    res.status(500).json({ error: "Error reading secure card state" });
+  }
+});
+
 // Start integration with Vite middleware
 async function setupServer() {
   if (process.env.NODE_ENV !== "production") {
