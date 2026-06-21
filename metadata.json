@@ -1,0 +1,10 @@
+{
+  "name": "Interactive Birthday Card Maker",
+  "description": "Create, customize, and share beautiful interactive birthday cards complete with floating pop-able balloons, custom music, virtual gift boxes, sound effects, candle blowing, and AI-personalized content.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
