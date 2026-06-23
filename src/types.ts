@@ -41,6 +41,9 @@ export interface BirthdayCardState {
   pinterestWishParagraph?: string;
   pinterestFinalTitle?: string;
   pinterestFinalLetter?: string;
+  uploadedPhotos?: string[]; // compressed Base64 images array
+  uploadedMusic?: string; // compressed Base64 MP3 URL or reference
+  uploadedMusicName?: string; // custom title of the uploaded file
 }
 
 export interface SuggestionParams {

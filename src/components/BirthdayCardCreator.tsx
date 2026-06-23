@@ -103,6 +103,87 @@ export default function BirthdayCardCreator() {
     reader.readAsDataURL(file);
   };
 
+  // Handler to crop, compress and insert multiple album photos
+  const handleMultiplePhotosUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setImageUploadError(null);
+    const updatedPhotos = [...(formState.uploadedPhotos || [])];
+    const maxPhotos = 5;
+
+    // Process each file
+    Array.from(files).slice(0, maxPhotos - updatedPhotos.length).forEach((file: any) => {
+      if (!file.type.startsWith("image/")) {
+        setImageUploadError("Please upload clear PNG or JPG image files only.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          
+          // Width & height of 280 keeps the Base64 file extremely compact (~10KB) but neat on Polaroids
+          const size = 280;
+          canvas.width = size;
+          canvas.height = size;
+          
+          if (ctx) {
+            const minDim = Math.min(img.width, img.height);
+            const sx = (img.width - minDim) / 2;
+            const sy = (img.height - minDim) / 2;
+            ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+            
+            try {
+              const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.60); // 60% quality
+              setFormState((prev) => ({
+                ...prev,
+                uploadedPhotos: [...(prev.uploadedPhotos || []), compressedDataUrl],
+              }));
+            } catch (err) {
+              console.error("Multi-photo processing error:", err);
+            }
+          }
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Handler to upload and parse custom background soundtrack MP3 up to 1.5MB
+  const handleMusicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("audio/")) {
+      setImageUploadError("Please choose a valid MP3 or audio soundtrack file.");
+      return;
+    }
+
+    // Safeguard for Firestore's 1MB limit - ideally keep it under 1.2MB for Base64 serialization
+    if (file.size > 1.2 * 1024 * 1024) {
+      setImageUploadError("Soundtrack file size exceeds 1.2MB. Please upload a smaller clip or use our synthesized tunes.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Audio = event.target?.result as string;
+      setFormState((prev) => ({
+        ...prev,
+        uploadedMusic: base64Audio,
+        uploadedMusicName: file.name.replace(/\.[^/.]+$/, ""), // remove extension
+        music: "none" as any, // mute chiptunes/synth
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+
   // Loading quotes for funny AI progress spinner
   const loadingSteps = [
     "Sifting the galactic dictionaries of love...",
@@ -680,6 +761,99 @@ export default function BirthdayCardCreator() {
                           onChange={(e) => setFormState({ ...formState, pinterestSong: e.target.value })}
                           className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-lg text-slate-808 dark:text-white text-xs focus:outline-rose-405"
                         />
+                      </div>
+                    </div>
+
+                    {/* Dynamic Custom Photos and Sound Files */}
+                    <div className="pt-2 border-t border-dashed border-rose-100 dark:border-rose-900/20 space-y-3">
+                      <span className="text-[10px] uppercase font-bold text-[#f43f5e] tracking-wider font-sans block">Upload Custom Media (Optional)</span>
+                      
+                      {/* Album Photo Uploads */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Photos for 'Our Little Album' (Up to 5) ♡</label>
+                        <div className="grid grid-cols-5 gap-2 mb-2">
+                          {/* Render existing photos */}
+                          {(formState.uploadedPhotos || []).map((photoSrc, idx) => (
+                            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border-2 border-rose-300 shadow-xs group bg-white">
+                              <img src={photoSrc} alt={`Captured ${idx}`} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newPhotos = (formState.uploadedPhotos || []).filter((_, i) => i !== idx);
+                                  setFormState({ ...formState, uploadedPhotos: newPhotos });
+                                }}
+                                className="absolute top-0.5 right-0.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-0.5 text-[8px] cursor-pointer shadow-xs transition-transform active:scale-90"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                          {/* Placeholders if photos < 5 */}
+                          {Array.from({ length: Math.max(0, 5 - (formState.uploadedPhotos || []).length) }).map((_, i) => (
+                            <div key={i} className="aspect-square bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg flex items-center justify-center text-[10px] text-slate-300">
+                              none ♡
+                            </div>
+                          ))}
+                        </div>
+
+                        <label className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-dashed border-[#f43f5e]/40 hover:border-[#f43f5e] bg-white hover:bg-rose-50/40 rounded-lg cursor-pointer transition-all">
+                          <Upload className="w-3.5 h-3.5 text-[#f43f5e]" />
+                          <span className="text-[10px] font-bold text-[#f43f5e]">Add custom memory photo(s)</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleMultiplePhotosUpload}
+                            className="hidden"
+                            id="pinterest-photos-input"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Background Music Soundtrack Upload */}
+                      <div className="pt-2 border-t border-dashed border-rose-100 dark:border-rose-900/10">
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Custom Soundtrack MP3 (Max 1.2MB)</label>
+                        <p className="text-[8px] text-slate-400 mb-1.5 leading-relaxed">
+                          Provide an MP3 audio file to override the default synthesized background tune.
+                        </p>
+
+                        {formState.uploadedMusic ? (
+                          <div className="bg-rose-50/80 rounded-lg p-2 border border-rose-150 flex items-center justify-between">
+                            <div className="flex items-center space-x-2 truncate">
+                              <span className="text-xs">🎵</span>
+                              <div className="truncate">
+                                <span className="text-[10px] font-black text-rose-700 block truncate">{formState.uploadedMusicName || "uploaded-music"}</span>
+                                <span className="text-[8px] text-rose-400 capitalize">soundtrack ready!</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormState({
+                                  ...formState,
+                                  uploadedMusic: undefined,
+                                  uploadedMusicName: undefined,
+                                  music: "piano"
+                                });
+                              }}
+                              className="text-[9px] text-rose-500 hover:text-rose-700 font-extrabold cursor-pointer hover:bg-rose-100 px-1.5 py-0.5 rounded"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-dashed border-purple-300 hover:border-purple-500 bg-white hover:bg-purple-50/20 rounded-lg cursor-pointer transition-all">
+                            <Music className="w-3.5 h-3.5 text-purple-500" />
+                            <span className="text-[10px] font-bold text-purple-600">Upload background MP3 audio</span>
+                            <input
+                              type="file"
+                              accept="audio/*"
+                              onChange={handleMusicUpload}
+                              className="hidden"
+                              id="pinterest-soundtrack-input"
+                            />
+                          </label>
+                        )}
                       </div>
                     </div>
                   </div>

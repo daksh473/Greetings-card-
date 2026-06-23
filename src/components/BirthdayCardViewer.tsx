@@ -32,6 +32,16 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
   const [micActive, setMicActive] = useState(false);
   const [pinterestPage, setPinterestPage] = useState(1);
 
+  // States and refs for dynamic multimedia Kawaii card features
+  const [albumIndex, setAlbumIndex] = useState(0);
+  const [activeWish, setActiveWish] = useState<string | null>(null);
+  const [isSpinningWish, setIsSpinningWish] = useState(false);
+  
+  const uploadedAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioVolume, setAudioVolume] = useState(0.7);
+
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -156,6 +166,100 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     }
   };
 
+  // Helper to format MP3 playback seconds into 0:00 style strings
+  const formatTime = (secs: number) => {
+    if (isNaN(secs)) return "0:00";
+    const minutes = Math.floor(secs / 60);
+    const seconds = Math.floor(secs % 60);
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
+
+  // Sync state metadata & durations for custom uploaded track
+  useEffect(() => {
+    if (!state.uploadedMusic) return;
+    const audio = uploadedAudioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => {
+      setAudioCurrentTime(audio.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setAudioDuration(audio.duration || 0);
+    };
+
+    const handleEnded = () => {
+      setAudioPlaying(false);
+      setAudioCurrentTime(0);
+    };
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("ended", handleEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [state.uploadedMusic]);
+
+  // Dynamic Polaroid album parser connecting memories & favourite things input
+  const getPolaroidMemories = () => {
+    const defaultData = [
+      {
+        photo: "",
+        emoji: "🧁",
+        title: "sweet laughter",
+        caption: state.pinterestMemory1 || "the bright smiles we share whenever we meet up ♡",
+        quote: "the little cafe chats and random plans are my favorites."
+      },
+      {
+        photo: "",
+        emoji: "🌌",
+        title: "endless cosmic chats",
+        caption: state.pinterestMemory2 || "sipping cozy lattes and losing track of time talking about everything...",
+        quote: "time flies when we speak about our dreams."
+      },
+      {
+        photo: "",
+        emoji: "🧸",
+        title: "warm cozy moments",
+        caption: state.pinterestMemory3 || "just really, truly thankful that i get to spend another year by your side",
+        quote: "forever grateful that you are matching my energy."
+      }
+    ];
+
+    if (state.uploadedPhotos && state.uploadedPhotos.length > 0) {
+      const memoriesList = (state.pinterestMemories || "sharing smiles, coffee walks, late night jokes").split(",").map(s => s.trim());
+      const favouritesList = (state.pinterestFavouriteThings || "matcha, hoodies, cozy games").split(",").map(s => s.trim());
+      
+      const templates = [
+        { title: "favorite chapter", quote: "a tiny snippet of my absolute favorite memory with you." },
+        { title: "cozy vibes", quote: "matching coffee latte and sweet fluffy energies." },
+        { title: "another polaroid", quote: "captured forever inside our digital happy journal." },
+        { title: "silly inside jokes", quote: "laughing till we can't compile anymore..." },
+        { title: "with you, always", quote: "wishing this warm light never fades away." },
+      ];
+
+      return state.uploadedPhotos.map((photo, idx) => {
+        const memText = memoriesList[idx % memoriesList.length] || "the quiet times we share together";
+        const favText = favouritesList[idx % favouritesList.length] || "sweet surprises and cute doodles";
+        const templ = templates[idx % templates.length];
+        
+        return {
+          photo,
+          emoji: "",
+          title: `${templ.title} ♡`,
+          caption: `${memText} — together with some ${favText}.`,
+          quote: templ.quote
+        };
+      });
+    }
+
+    return defaultData;
+  };
+
   const themeStyle = getEmotionClasses();
 
   // Pick Custom Avatar emoji or render uploaded avatar URL
@@ -275,12 +379,26 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
 
   // Handle music toggle
   const toggleAudio = () => {
-    if (audioPlaying) {
-      synth.stopMusic();
-      setAudioPlaying(false);
+    if (state.uploadedMusic) {
+      if (uploadedAudioRef.current) {
+        if (audioPlaying) {
+          uploadedAudioRef.current.pause();
+          setAudioPlaying(false);
+        } else {
+          uploadedAudioRef.current.play().catch(err => {
+            console.warn("Audio playback issue (user click required):", err);
+          });
+          setAudioPlaying(true);
+        }
+      }
     } else {
-      synth.startMusic(state.music);
-      setAudioPlaying(true);
+      if (audioPlaying) {
+        synth.stopMusic();
+        setAudioPlaying(false);
+      } else {
+        synth.startMusic(state.music);
+        setAudioPlaying(true);
+      }
     }
   };
 
@@ -429,6 +547,10 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     synth.stopMusic();
     setAudioPlaying(false);
     setActiveQuoteToast(null);
+    if (uploadedAudioRef.current) {
+      uploadedAudioRef.current.pause();
+      uploadedAudioRef.current.currentTime = 0;
+    }
     if (onResetPreview) {
       onResetPreview();
     }
@@ -437,8 +559,18 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
   const triggerOpenCard = () => {
     setEnvelopeOpened(true);
     // Start chosen music automatically!
-    synth.startMusic(state.music);
-    setAudioPlaying(state.music !== "none");
+    if (state.uploadedMusic) {
+      if (uploadedAudioRef.current) {
+        uploadedAudioRef.current.currentTime = 0;
+        uploadedAudioRef.current.play().catch(err => {
+          console.warn("Autoplay audio was initially blocked by the browser. Press play manually if needed. Error:", err);
+        });
+        setAudioPlaying(true);
+      }
+    } else {
+      synth.startMusic(state.music);
+      setAudioPlaying(state.music !== "none");
+    }
     
     // Automatically trigger mic listening if blow cake challenge is active
     if (state.interactiveChallenge === "cake" || state.interactiveChallenge === "all") {
@@ -885,63 +1017,98 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: -20, opacity: 0 }}
-                    className="py-2 w-full"
+                    className="py-2 w-full flex flex-col items-center justify-center select-none"
                   >
-                    <div className="text-center mb-5">
-                      <span className="text-[10px] font-bold font-mono tracking-widest text-rose-500 uppercase block mb-1">Polaroid Stack</span>
-                      <h3 className="text-xl md:text-2xl font-serif font-bold text-rose-600 lowercase tracking-tight leading-none mb-1">our little album</h3>
-                      <p className="text-[10px] text-slate-500 lowercase font-medium">a few of my favourite moments with you ♡</p>
+                    <div className="text-center mb-4">
+                      <span className="text-[10px] font-bold font-mono tracking-widest text-rose-500 uppercase block mb-1">Interactive Album</span>
+                      <h3 className="text-xl md:text-2xl font-serif font-bold text-rose-600 lowercase tracking-tight leading-none mb-1">our little album ♡</h3>
+                      <p className="text-[10px] text-slate-500 lowercase font-medium">a few of my favourite moments with you</p>
                     </div>
 
-                    {/* Stack of Polaroids */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
-                      {/* Polaroid 1 */}
-                      <motion.div 
-                        whileHover={{ rotate: -2, y: -4 }}
-                        className="bg-white p-3 pb-5 rounded-md border border-slate-200/50 shadow-md rotate-1 flex flex-col justify-between"
+                    {/* Polaroid Carousel Slider */}
+                    <div className="relative w-full max-w-sm flex items-center justify-between px-3 md:px-6">
+                      {/* Left Arrow Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          synth.playSparkle();
+                          setAlbumIndex(prev => (prev === 0 ? getPolaroidMemories().length - 1 : prev - 1));
+                        }}
+                        className="p-1.5 rounded-full bg-white border border-rose-105 hover:bg-rose-50 text-rose-600 shadow-sm cursor-pointer z-10 transition-transform active:scale-90"
                       >
-                        <div className="aspect-square bg-rose-50/80 rounded-xs overflow-hidden flex items-center justify-center relative border border-slate-100/60 shadow-inner">
-                          {state.avatarUrl && state.avatarUrl !== "kitty" ? (
-                            <img 
-                              src={state.avatarUrl} 
-                              alt="Memory 1" 
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          ) : (
-                            <span className="text-4xl animate-bounce">🧁</span>
-                          )}
-                        </div>
-                        <p className="text-[9px] font-serif tracking-tight text-center text-slate-500/90 mt-2.5 h-8 overflow-hidden leading-tight lowercase">
-                          {state.pinterestMemory1 || "the bright smiles we share whenever we meet up ♡"}
-                        </p>
-                      </motion.div>
+                        ←
+                      </button>
 
-                      {/* Polaroid 2 */}
-                      <motion.div 
-                        whileHover={{ rotate: 1, y: -4 }}
-                        className="bg-white p-3 pb-5 rounded-md border border-slate-200/50 shadow-md -rotate-1 flex flex-col justify-between"
-                      >
-                        <div className="aspect-square bg-purple-50 rounded-xs overflow-hidden flex items-center justify-center relative border border-slate-100/60 shadow-inner">
-                          <span className="text-4xl animate-pulse">🌌</span>
-                        </div>
-                        <p className="text-[9px] font-serif tracking-tight text-center text-slate-500/90 mt-2.5 h-8 overflow-hidden leading-tight lowercase">
-                          {state.pinterestMemory2 || "sipping cozy lattes and losing track of time talking about everything..."}
-                        </p>
-                      </motion.div>
+                      {/* Active Polaroid Card Frame */}
+                      <div className="flex-1 px-4 flex justify-center">
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={albumIndex}
+                            initial={{ scale: 0.92, opacity: 0, rotate: -1 }}
+                            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                            exit={{ scale: 0.92, opacity: 0, rotate: 1 }}
+                            transition={{ type: "spring", stiffness: 120, damping: 14 }}
+                            className="bg-white p-3.5 pb-6 rounded-md border border-slate-200/65 shadow-[5px_5px_15px_rgba(0,0,0,0.06)] flex flex-col items-center justify-between max-w-[210px] w-full relative group"
+                          >
+                            {/* Floating stickers */}
+                            <span className="absolute -top-2 -left-2 text-md rotate-[-12deg] select-none pointer-events-none drop-shadow">🌸</span>
+                            <span className="absolute -bottom-2 -right-2 text-md rotate-[15deg] select-none pointer-events-none drop-shadow">💖</span>
 
-                      {/* Polaroid 3 */}
-                      <motion.div 
-                        whileHover={{ rotate: -1, y: -4 }}
-                        className="bg-white p-3 pb-5 rounded-md border border-slate-200/50 shadow-md rotate-2 flex flex-col justify-between"
+                            {/* Crisp Zoom Picture viewport */}
+                            <div className="aspect-square w-full bg-rose-50/50 rounded-sm overflow-hidden flex items-center justify-center relative border border-slate-100 shadow-inner">
+                              {getPolaroidMemories()[albumIndex]?.photo ? (
+                                <img
+                                  src={getPolaroidMemories()[albumIndex].photo}
+                                  alt="Custom Memory Portrait"
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <div className="flex flex-col items-center justify-center text-center p-3 opacity-90">
+                                  <span className="text-4xl animate-pulse mb-1">
+                                    {getPolaroidMemories()[albumIndex]?.emoji || "🎀"}
+                                  </span>
+                                  <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest leading-none font-mono">Kawaii</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Caption details & dynamic quotes */}
+                            <div className="text-center mt-3 space-y-1 w-full">
+                              <p className="text-[11px] font-bold font-serif text-rose-600 lowercase tracking-tight">{getPolaroidMemories()[albumIndex]?.title}</p>
+                              <p className="text-[9px] font-serif tracking-tight text-slate-500 mt-1 leading-snug lowercase h-10 overflow-y-auto">
+                                {getPolaroidMemories()[albumIndex]?.caption}
+                              </p>
+                              <p className="text-[7.5px] font-mono tracking-widest text-[#f43f5e] uppercase pt-1 border-t border-dashed border-rose-100/60 block">
+                                "{getPolaroidMemories()[albumIndex]?.quote}"
+                              </p>
+                            </div>
+                          </motion.div>
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Right Arrow Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          synth.playSparkle();
+                          setAlbumIndex(prev => (prev === getPolaroidMemories().length - 1 ? 0 : prev + 1));
+                        }}
+                        className="p-1.5 rounded-full bg-white border border-rose-105 hover:bg-rose-50 text-rose-600 shadow-sm cursor-pointer z-10 transition-transform active:scale-90"
                       >
-                        <div className="aspect-square bg-blue-50 rounded-xs overflow-hidden flex items-center justify-center relative border border-slate-100/60 shadow-inner">
-                          <span className="text-4xl">🧸</span>
-                        </div>
-                        <p className="text-[9px] font-serif tracking-tight text-center text-slate-500/90 mt-2.5 h-8 overflow-hidden leading-tight lowercase">
-                          {state.pinterestMemory3 || "just really, truly thankful that i get to spend another year by your side"}
-                        </p>
-                      </motion.div>
+                        →
+                      </button>
+                    </div>
+
+                    {/* Pagination indicators under slider */}
+                    <div className="flex justify-center space-x-1 mt-3 select-none">
+                      {getPolaroidMemories().map((_, i) => (
+                        <div
+                          key={i}
+                          onClick={() => setAlbumIndex(i)}
+                          className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all ${albumIndex === i ? 'bg-rose-500 w-3' : 'bg-rose-200'}`}
+                        />
+                      ))}
                     </div>
                   </motion.div>
                 )}
@@ -952,34 +1119,88 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: -20, opacity: 0 }}
-                    className="py-2 max-w-md mx-auto w-full"
+                    className="py-2 max-w-md mx-auto w-full text-center"
                   >
-                    <div className="bg-white/85 rounded-3xl p-6 md:p-8 border border-rose-100 shadow-xs space-y-4">
-                      <span className="text-[10px] font-bold text-[#f43f5e] font-mono tracking-widest block uppercase">a page dedicated of wishes</span>
+                    <div className="bg-white/90 rounded-3xl p-6 md:p-8 border-4 border-[#4c0519] shadow-[6px_6px_0px_#4c0519] space-y-4">
+                      <span className="text-[10px] font-bold text-[#f43f5e] font-mono tracking-widest block uppercase">Dedicated Wholesome Wishes ♡</span>
                       
-                      {/* Checklist */}
-                      <div className="space-y-2.5 font-sans">
-                        <label className="flex items-center space-x-3 text-[11px] font-semibold text-slate-700">
-                          <Check className="w-3.5 h-3.5 text-white bg-rose-450 border border-rose-300 rounded-full p-0.5" />
-                          <span>thank you for your infinite patience with me 🌸</span>
-                        </label>
-                        <label className="flex items-center space-x-3 text-[11px] font-semibold text-slate-700">
-                          <Check className="w-3.5 h-3.5 text-white bg-rose-450 border border-rose-300 rounded-full p-0.5" />
-                          <span>thank you for our sweet late-night chats 🍵</span>
-                        </label>
-                        <label className="flex items-center space-x-3 text-[11px] font-semibold text-slate-700">
-                          <Check className="w-3.5 h-3.5 text-white bg-rose-450 border border-rose-300 rounded-full p-0.5" />
-                          <span>thank you for silly inside jokes we can't explain 🧸</span>
-                        </label>
-                        <label className="flex items-center space-x-3 text-[11px] font-semibold text-slate-700">
-                          <Check className="w-3.5 h-3.5 text-white bg-rose-450 border border-rose-300 rounded-full p-0.5" />
-                          <span>thank you for just genuinely being yourself ♡</span>
-                        </label>
+                      <div className="py-4 flex flex-col items-center">
+                        <AnimatePresence mode="wait">
+                          {activeWish ? (
+                            <motion.div
+                              key={activeWish}
+                              initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                              animate={{ scale: 1, opacity: 1, y: 0 }}
+                              exit={{ scale: 0.9, opacity: 0, y: -10 }}
+                              className="bg-rose-50/50 rounded-2xl p-4 border border-rose-100 text-center text-xs md:text-sm text-rose-950 font-serif leading-relaxed italic relative"
+                            >
+                              <div className="absolute top-1 left-2 text-md select-none opacity-40">“</div>
+                              <span className="px-2 block">{activeWish}</span>
+                              <div className="absolute bottom-1 right-2 text-md select-none opacity-40">”</div>
+                            </motion.div>
+                          ) : (
+                            <div className="py-6 text-xs text-slate-400 italic font-mono lowercase">
+                              tap the button below to pick a special wish...
+                            </div>
+                          )}
+                        </AnimatePresence>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isSpinningWish) return;
+                            setIsSpinningWish(true);
+                            synth.playSparkle();
+                            
+                            // Spin interval loop for aesthetic effect
+                            let count = 0;
+                            const wishesArr = [
+                              "may your day be filled with warm lattes & soft puppy cuddles! 🍵🐶",
+                              "wishing you zero database lag and infinite coffee refills today! 💻☕",
+                              "may all your dreams compile with zero errors today! ✨🐾",
+                              "sending you a celestial bubble of infinite warm hugs and cozy lavender hoodies! 💜",
+                              "may your heart be as full and fluffy as a basket of tiny purring kittens! 🐱🌸",
+                              "happy birthday! hope your path is sprinkled with endless stars! ⭐🧁",
+                              "wishing you a year of cozy afternoons, peaceful strolls, and true handholders! 🧸🌷",
+                              "may you always find reasons to laugh until your pink cheeks hurt! 😄🎀",
+                              "sending you sweet virtual cakes with extra pastel star sprinkles on top! 🎂💫",
+                              "happy birthday to the most wonderful soul who makes this world so bright! 💖✨",
+                              "may your code run perfectly on the first try and your tea never go cold! 💻🍵",
+                              "wishing you countless dreamy nights and bright, hopeful mornings ahead! 🌌⛅",
+                              "may your day feel just like a cozy Ghibli movie with beautiful soothing music! 🎬🎶",
+                              "sending you a small pocketful of magic daisies and sweet lucky clovers! 🌼🍀",
+                              "may you compile happy memories that easily bypass all exceptions! 👾💛",
+                              "wishing you absolute safety, vibrant health, and peaceful, quiet self-love! 🌸🥰",
+                              "may your heart always be a cozy home for simple joys and deep peace. 🏡💖",
+                              "hope you unwrap the most delightful surprises and enjoy every sweet byte! 🎁🍩",
+                              "happy birthday! thank you for just genuinely being the special light you are! 🕯️🧸",
+                              "may this new chapter bring you unlimited sweet treats and gentle, warm breezes! 🍓🍃"
+                            ];
+
+                            const timer = setInterval(() => {
+                              setActiveWish(wishesArr[Math.floor(Math.random() * wishesArr.length)]);
+                              count++;
+                              if (count > 10) {
+                                clearInterval(timer);
+                                // Final selection
+                                const finalWish = wishesArr[Math.floor(Math.random() * wishesArr.length)];
+                                setActiveWish(finalWish);
+                                setIsSpinningWish(false);
+                                confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
+                                synth.playCheer();
+                              }
+                            }, 80);
+                          }}
+                          disabled={isSpinningWish}
+                          className="mt-5 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 hover:scale-105 active:scale-95 disabled:opacity-50 border-2 border-[#4c0519] shadow-[3px_3px_0px_#4c0519] text-white text-xs font-bold font-mono tracking-widest uppercase cursor-pointer rounded-full flex items-center space-x-1 transition-all"
+                        >
+                          <span>{isSpinningWish ? "spinning wishlist..." : "PICK A WISH ♡ →"}</span>
+                        </button>
                       </div>
 
-                      <div className="pt-4 border-t border-dashed border-rose-100">
+                      <div className="pt-2 border-t border-dashed border-rose-100">
                         <p className="text-xs md:text-sm text-slate-650 font-serif leading-relaxed italic lowercase">
-                          {state.pinterestWishParagraph || "thank you for being you — for the infinite patience, the late-night heart-to-hearts, the silly inside jokes, and for making my days so much brighter!"}
+                          {state.pinterestWishParagraph || "thank you for being you — for the infinite patience, the late-night heart-to-hearts, the silly jokes, and for making my days so much brighter!"}
                         </p>
                       </div>
                     </div>
@@ -994,22 +1215,27 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     exit={{ x: -20, opacity: 0 }}
                     className="py-2 max-w-md mx-auto w-full"
                   >
-                    <div className="bg-stone-50 border border-stone-200 p-6 md:p-8 rounded-3xl shadow-xs space-y-4 font-serif text-slate-800 overflow-hidden relative">
-                      {/* Postage Stamps */}
-                      <div className="absolute top-4 right-4 w-12 h-14 bg-rose-50 border border-dashed border-rose-300 flex flex-col items-center justify-center p-1 font-sans rotate-6 shadow-xs select-none">
-                        <span className="text-[7px] text-rose-400 font-black tracking-tighter block uppercase">Love Airmail</span>
-                        <span className="text-sm mt-1">💌</span>
+                    <div className="bg-gradient-to-tr from-[#fbf8ff] to-[#f3ebff] border-4 border-[#4c0519] p-6 md:p-8 rounded-[32px] shadow-[6px_6px_0px_#4c0519] space-y-4 font-serif text-slate-800 overflow-hidden relative">
+                      {/* Postage Stamps and Cute Pixel Art Header */}
+                      <div className="absolute top-4 right-4 w-12 h-14 bg-rose-50 border-2 border-dashed border-rose-300 flex flex-col items-center justify-center p-1 font-sans rotate-6 shadow-xs select-none">
+                        <span className="text-[6px] text-rose-400 font-bold tracking-tighter block uppercase">Love Stamp</span>
+                        <span className="text-md mt-0.5">🧸</span>
                       </div>
 
-                      <div className="pt-2 space-y-4">
-                        <h4 className="text-xl font-bold text-rose-600 lowercase tracking-tight leading-none pt-2">
-                          {state.pinterestFinalTitle || "happy birthday ♡"}
-                        </h4>
-                        <p className="text-xs md:text-sm leading-relaxed italic whitespace-pre-wrap lowercase text-slate-700">
+                      <div className="pt-2 space-y-4 text-center md:text-left">
+                        <div className="flex flex-col items-center md:items-start space-y-1.5 border-b border-dashed border-purple-200 pb-3">
+                          <span className="text-2xl">💌</span>
+                          <h4 className="text-xl font-bold text-rose-600 lowercase tracking-tight leading-none">
+                            {state.pinterestFinalTitle || "happy birthday ♡"}
+                          </h4>
+                        </div>
+                        
+                        <p className="text-xs md:text-sm leading-relaxed italic whitespace-pre-wrap lowercase text-slate-700 min-h-[140px] text-left">
                           {state.pinterestFinalLetter || "happy birthday once again. i hope this new chapter brings you so many cozy afternoons, sweet achievements, and gentle smiles. i'll always be here to support you."}
                         </p>
-                        <div className="pt-1 text-right">
-                          <span className="text-xs font-sans text-rose-400 font-black tracking-widest block italic">with love, forever ♡</span>
+
+                        <div className="pt-2 text-right">
+                          <span className="text-xs font-sans text-purple-650 font-black tracking-widest block italic">with all my love ♡</span>
                         </div>
                       </div>
                     </div>
@@ -1225,6 +1451,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
             {/* RETRY / RESET CELEBRATION CONTROL */}
             <div className="text-center mt-8">
               <button
+                type="button"
                 onClick={restartCelebrate}
                 className={`rounded-full px-5 py-2 text-xs flex items-center space-x-2 mx-auto justify-center border transition-all ${themeStyle.secondaryButton}`}
               >
@@ -1234,6 +1461,84 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
             </div>
           </div>
         )
+      )}
+
+      {/* Hidden Audio element for custom background MP3 soundtrack files */}
+      {state.uploadedMusic && (
+        <audio
+          ref={uploadedAudioRef}
+          src={state.uploadedMusic}
+          loop
+          preload="auto"
+          style={{ display: "none" }}
+        />
+      )}
+
+      {/* FLOATING CUTE PINK MEDIA CONTROLLER */}
+      {envelopeOpened && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-xs w-72 bg-white/95 dark:bg-rose-950/95 border-4 border-[#4c0519] rounded-2xl shadow-[4px_4px_0px_#4c0519] p-3 text-pink-950 dark:text-pink-100 flex flex-col space-y-1.5 font-sans select-none text-left">
+          <div className="flex items-center space-x-3">
+            {/* Play Pause button */}
+            <button
+              type="button"
+              onClick={toggleAudio}
+              className="w-8 h-8 p-0 bg-rose-400 hover:bg-rose-500 hover:scale-105 active:scale-95 text-white rounded-full cursor-pointer border-2 border-[#4c0519] transition-transform text-xs flex items-center justify-center shadow-xs text-center font-bold"
+            >
+              {audioPlaying ? "⏸" : "▶"}
+            </button>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest leading-none font-mono">background playing 🎵</p>
+              <p className="text-xs font-serif italic font-semibold truncate leading-tight pt-0.5">
+                {state.uploadedMusicName || state.pinterestSong || "cozy birthday soundtrack"}
+              </p>
+            </div>
+          </div>
+
+          {state.uploadedMusic && (
+            <div className="space-y-1 font-mono">
+              {/* Progress bar */}
+              <div className="flex items-center space-x-1.5 text-[8px] text-slate-500">
+                <span>{formatTime(audioCurrentTime)}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={audioDuration || 100}
+                  value={audioCurrentTime}
+                  onChange={(e) => {
+                    const seekVal = parseFloat(e.target.value);
+                    if (uploadedAudioRef.current) {
+                      uploadedAudioRef.current.currentTime = seekVal;
+                      setAudioCurrentTime(seekVal);
+                    }
+                  }}
+                  className="flex-grow accent-rose-500 h-1 bg-rose-100 rounded-lg cursor-pointer appearance-none outline-none"
+                />
+                <span>{formatTime(audioDuration)}</span>
+              </div>
+
+              {/* Volume icon and slider */}
+              <div className="flex items-center justify-end space-x-1">
+                <span className="text-[9px]">🔊</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={audioVolume}
+                  onChange={(e) => {
+                    const vol = parseFloat(e.target.value);
+                    setAudioVolume(vol);
+                    if (uploadedAudioRef.current) {
+                      uploadedAudioRef.current.volume = vol;
+                    }
+                  }}
+                  className="w-16 h-1 bg-rose-100 rounded-lg cursor-pointer appearance-none outline-none"
+                  style={{ accentColor: "#ec4899" }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
