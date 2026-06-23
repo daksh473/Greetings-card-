@@ -30,6 +30,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
   const [balloons, setBalloons] = useState<FloatingBalloon[]>([]);
   const [activeQuoteToast, setActiveQuoteToast] = useState<string | null>(null);
   const [micActive, setMicActive] = useState(false);
+  const [pinterestPage, setPinterestPage] = useState(1);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -38,6 +39,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
 
   // Sound generator parameters
   const theme = state.theme;
+  const emotion = state.emotion || "funny";
 
   // Render Theme Styles
   // Returns styling classes for the chosen theme: [Background, Card, Font display, Text body, Buttons, Accent badge]
@@ -72,7 +74,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
           heading: "font-sans font-black text-3xl md:text-5xl tracking-normal text-slate-900 stroke-text",
           body: "text-slate-900 font-medium leading-relaxed",
           button: "bg-[#f472b6] hover:bg-[#ec4899] text-white font-extrabold border-4 border-slate-900 shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all",
-          secondaryButton: "bg-yellow-100 hover:bg-yellow-200 text-slate-900 font-extrabold border-4 border-slate-900 shadow-[4px_4px_0px_rgba(0,0,0,1)]",
+          secondaryButton: "bg-yellow-105 hover:bg-yellow-200 text-slate-900 font-extrabold border-4 border-slate-900 shadow-[4px_4px_0px_rgba(0,0,0,1)]",
           accent: "text-[#db2777]",
           glow: "border-4 border-slate-900 shadow-[0_0_0_4px_#f472b6]",
         };
@@ -101,7 +103,60 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     }
   };
 
-  const themeStyle = getThemeClasses();
+  // Returns styling classes and dynamic configurations for the chosen card Emotion/Mood page
+  const getEmotionClasses = () => {
+    switch (emotion) {
+      case "emotional":
+        return {
+          bg: "bg-gradient-to-br from-[#1e0a12] via-[#2f101a] to-[#100307] text-rose-100 font-sans min-h-screen relative overflow-hidden",
+          card: "bg-rose-950/20 border border-rose-500/35 shadow-[0_10px_35px_rgba(244,63,94,0.1)] rounded-3xl text-rose-100 backdrop-blur-md",
+          heading: "font-serif text-3xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-rose-350 via-pink-205 to-amber-200",
+          body: "text-rose-100/90 font-light leading-loose tracking-wide",
+          button: "bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold tracking-wider rounded-xl shadow-[0_0_15px_rgba(244,63,94,0.25)]",
+          secondaryButton: "bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-500/40",
+          accent: "text-rose-400",
+          glow: "shadow-[0_0_20px_#f43f5e]",
+        };
+      case "poetic":
+        return {
+          bg: "bg-gradient-to-br from-[#0c0d16] via-[#121626] to-[#04050a] text-amber-50/90 font-serif min-h-screen relative overflow-hidden",
+          card: "bg-slate-900/50 border border-amber-500/25 shadow-[0_0_30px_rgba(245,158,11,0.06)] rounded-3xl text-amber-100/90 backdrop-blur-sm",
+          heading: "font-serif text-3xl md:text-5xl tracking-normal italic font-semibold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-101 to-amber-300",
+          body: "text-amber-50/80 font-serif leading-loose tracking-wide italic",
+          button: "bg-amber-700 hover:bg-amber-600 text-stone-900 font-bold border border-amber-500 shadow-md",
+          secondaryButton: "bg-stone-950/85 hover:bg-stone-900 text-amber-200 border border-amber-500/30",
+          accent: "text-amber-400",
+          glow: "shadow-[0_0_20px_#f59e0b]",
+        };
+      case "cute":
+        return {
+          bg: "bg-gradient-to-br from-[#fff1f2] via-[#faf5ff] to-[#f0fdf4] text-[#4c0519] font-sans min-h-screen relative overflow-hidden",
+          card: "bg-white/95 border-4 border-[#4c0519] shadow-[6px_6px_0px_#4c0519] rounded-3xl text-pink-950",
+          heading: "font-sans text-3xl md:text-5xl font-black tracking-normal text-[#ec4899] drop-shadow-sm",
+          body: "text-[#4c0519]/90 font-medium leading-relaxed",
+          button: "bg-[#ec4899] hover:bg-[#db2777] text-white font-extrabold border-4 border-[#4c0519] shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all",
+          secondaryButton: "bg-rose-50 hover:bg-rose-100 text-[#db2777] font-bold border-2 border-[#4c0519]/25",
+          accent: "text-[#ec4899]",
+          glow: "border-4 border-[#db2777]",
+        };
+      case "celebratory":
+        return {
+          bg: "bg-gradient-to-br from-[#020410] via-[#060e26] to-[#010207] text-yellow-100 font-sans min-h-screen relative overflow-hidden",
+          card: "bg-[#0a112c]/90 border-2 border-yellow-500/60 shadow-[0_0_25px_rgba(234,179,8,0.25)] rounded-3xl text-amber-100",
+          heading: "font-sans font-black text-3xl md:text-5xl tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-200 to-yellow-500 animate-pulse",
+          body: "text-yellow-100/90 leading-relaxed font-semibold tracking-wide",
+          button: "bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 text-slate-900 border border-yellow-300 font-black tracking-widest uppercase",
+          secondaryButton: "bg-slate-950 hover:bg-slate-900 text-yellow-300 border border-yellow-500/40",
+          accent: "text-yellow-450",
+          glow: "shadow-[0_0_15px_#eab308]",
+        };
+      case "funny":
+      default:
+        return getThemeClasses() || getThemeClasses();
+    }
+  };
+
+  const themeStyle = getEmotionClasses();
 
   // Pick Custom Avatar emoji or render uploaded avatar URL
   const renderAvatar = () => {
@@ -143,17 +198,64 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
       "bg-orange-400",
     ];
 
-    const secretQuotes = [
-      state.shortQuote || "You're dynamic!",
-      "Happy Birthday!",
-      "Have a blast! 🚀",
-      "You make the world catalog sparkle!",
-      "An absolute legend! 👑",
-      "May all your coding compile on the first try! 💻",
-      "Eat tons of cake! 🎂",
-      "Sending you infinite cozy hugs! 🤗",
-      "Another outstanding year older! 🎉",
-    ];
+    const getEmotionQuotes = () => {
+      switch (emotion) {
+        case "emotional":
+          return [
+            state.shortQuote || "You are so loved! ❤️",
+            "Deeply grateful for your presence!",
+            "You are a true blessing. 🥰",
+            "Always and forever. 💖",
+            "Sending you infinite warm hugs! 🤗",
+            "A rare and beautiful soul. ✨",
+            "Celebrating you today! 🎉",
+            "So proud of your journey! 🌱",
+          ];
+        case "poetic":
+          return [
+            state.shortQuote || "Let your heart wander! 📜",
+            "A star illuminating our lives! ⭐",
+            "Stardust inside your bones. 🪐",
+            "A rare diamond in the rough! 💎",
+            "Like a verse written on wind. 🌾",
+            "May your days compile into beauty. 💻",
+            "Written in the stars above! 🌌",
+          ];
+        case "cute":
+          return [
+            state.shortQuote || "You are the sweetest! 🍭",
+            "Sweet cutie pie! 🐼",
+            "Warm fluffy kittens! 🐾",
+            "Stay sweet, stay gold! 🦄",
+            "Cupcake sprinkles! 🧁",
+            "Happy cute birthday! 🎀",
+            "Tons of strawberry treats! 🍓",
+          ];
+        case "celebratory":
+          return [
+            state.shortQuote || "CHAMPAGNE SHOWERS! 🍾",
+            "LET'S MAKE SOME NOISE! 📣",
+            "You absolute legend! 👑",
+            "Raise your cups! 🥂",
+            "Time to dance all night! 💃",
+            "Vibrant fireworks of happiness! 🎆",
+            "Unleash the disco sound! 🪩",
+          ];
+        case "funny":
+        default:
+          return [
+            state.shortQuote || "At least you compiled! 👾",
+            "Error 404: Youth not found! 💻",
+            "Another year closer to senior discounts! 👵",
+            "You age like exquisite dairy! 🧀",
+            "Comically handsome/gorgeous! 🥸",
+            "Still clean of bugs! 🐛",
+            "Older but definitely not wiser! 🤪",
+          ];
+      }
+    };
+
+    const secretQuotes = getEmotionQuotes();
 
     const list: FloatingBalloon[] = [];
     // Generate 12 balloons with randomized placements
@@ -169,7 +271,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
       });
     }
     setBalloons(list);
-  }, [envelopeOpened, state.shortQuote]);
+  }, [envelopeOpened, state.shortQuote, emotion]);
 
   // Handle music toggle
   const toggleAudio = () => {
@@ -323,6 +425,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     setCandlesBlown(false);
     setGiftDiscovered(false);
     setEnvelopeOpened(false);
+    setPinterestPage(1);
     synth.stopMusic();
     setAudioPlaying(false);
     setActiveQuoteToast(null);
@@ -460,8 +563,44 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
 
   return (
     <div className={themeStyle.bg}>
-      {/* Background decorations depending on Theme */}
-      {theme === "midnight" && (
+      {/* Background decorations depending on Theme & Emotion */}
+      {emotion === "emotional" && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-10 left-10 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl animate-pulse" />
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-pink-500/5 rounded-full blur-3xl animate-pulse" />
+          {/* Gentle hearts */}
+          <div className="absolute top-16 right-[15%] text-rose-500/20 text-3xl animate-bounce">💖</div>
+          <div className="absolute bottom-20 left-[10%] text-pink-500/30 text-2xl animate-ping">❤️</div>
+        </div>
+      )}
+
+      {emotion === "poetic" && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-10 w-32 h-32 rounded-full bg-amber-500/5 blur-3xl animate-pulse" />
+          {/* Custom Stars */}
+          <div className="absolute top-10 right-10 block text-amber-400/45 text-xl">✨</div>
+          <div className="absolute bottom-20 left-20 block text-amber-500/35 text-lg">⭐</div>
+          <div className="absolute top-40 left-[40%] text-amber-200/20 text-sm">🪐</div>
+        </div>
+      )}
+
+      {emotion === "cute" && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-12 left-[20%] text-pink-400/35 text-4xl">🧁</div>
+          <div className="absolute bottom-16 right-[10%] text-emerald-400/25 text-3xl">🐾</div>
+          <div className="absolute top-[35%] right-[20%] text-yellow-400/40 text-2xl">🧸</div>
+        </div>
+      )}
+
+      {emotion === "celebratory" && (
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(234,179,8,0.05),transparent_40%)]">
+          <div className="absolute top-12 left-20 text-yellow-500/40 text-4xl animate-pulse">🍾</div>
+          <div className="absolute bottom-20 right-12 text-yellow-400/35 text-3xl animate-spin">⚡</div>
+          <div className="absolute top-1/2 left-[15%] text-amber-400/30 text-xl animate-bounce">🎩</div>
+        </div>
+      )}
+
+      {emotion === "funny" && theme === "midnight" && (
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-10 left-10 w-2 h-2 bg-yellow-200 rounded-full animate-ping" />
           <div className="absolute top-40 right-20 w-3 h-3 bg-amber-300 rounded-full animate-pulse delay-500" />
@@ -470,7 +609,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
         </div>
       )}
 
-      {theme === "space" && (
+      {emotion === "funny" && theme === "space" && (
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-10 w-24 h-24 rounded-full bg-purple-500/10 blur-2xl" />
           <div className="absolute bottom-1/4 right-10 w-32 h-32 rounded-full bg-pink-500/10 blur-3xl animate-pulse" />
@@ -481,7 +620,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
       )}
 
       {/* Floating Sparkles for Disco */}
-      {theme === "disco" && (
+      {emotion === "funny" && theme === "disco" && (
         <div className="absolute inset-0 pointer-events-none">
           {/* Mirror Disco Ball */}
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
@@ -598,170 +737,503 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     height: `${b.size * 1.3}px`,
                   }}
                 >
-                  {/* Balloon string */}
-                  <div className="w-0.5 h-16 bg-slate-900/10 absolute -bottom-16 left-1/2 transform -translate-x-1/2" />
-                  {/* Floating particle sparkle inside balloon */}
-                  <div className="w-1/3 h-1/3 bg-white/25 rounded-full absolute top-1.5 left-2" />
-                  <span className="text-xs pointer-events-none drop-shadow">🎈</span>
+                  {emotion === "emotional" ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                      ❤️
+                    </div>
+                  ) : emotion === "poetic" ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-2xl animate-pulse">
+                      ✨
+                    </div>
+                  ) : emotion === "cute" ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                      🧁
+                    </div>
+                  ) : emotion === "celebratory" ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-2xl animate-bounce">
+                      🥂
+                    </div>
+                  ) : (
+                    <>
+                      {/* Balloon string */}
+                      <div className="w-0.5 h-16 bg-slate-900/10 absolute -bottom-16 left-1/2 transform -translate-x-1/2" />
+                      {/* Floating particle sparkle inside balloon */}
+                      <div className="w-1/3 h-1/3 bg-white/25 rounded-full absolute top-1.5 left-2" />
+                      <span className="text-xs pointer-events-none drop-shadow">🎈</span>
+                    </>
+                  )}
                 </motion.div>
               )
           )}
         </div>
       )}
-
       {/* MAIN CARDS CONTENT CONTAINER */}
       {envelopeOpened && (
-        <div className="max-w-2xl mx-auto px-4 py-16 flex flex-col justify-center min-h-screen relative z-20">
-          
-          {/* TITLE HEADER */}
-          <div className="text-center mb-8">
-            <span className="text-xs font-bold font-mono tracking-widest text-[#f43f5e] uppercase bg-rose-50 dark:bg-rose-950/40 py-1.5 px-4 rounded-full border border-rose-100 dark:border-rose-900/30">
-              Happy Birthday, {state.recipientName}! {state.recipientAge ? `• Age ${state.recipientAge}` : ""}
-            </span>
-            <h2 className={`${themeStyle.heading} mt-3`}>
-              Happy Birthday Wish {state.recipientAge ? `🎂` : "🎈"}
-            </h2>
-          </div>
+        state.isPinterestCard ? (
+          /* Render Pinterest Book */
+          <div className="max-w-2xl mx-auto px-4 py-8 md:py-16 flex flex-col justify-center min-h-screen relative z-20 font-space selection:bg-rose-100 selection:text-rose-900">
+            {/* Cute top floating pastel sparkles decoration */}
+            <div className="absolute top-10 left-10 text-xl opacity-40 animate-float">🌸</div>
+            <div className="absolute top-20 right-12 text-2xl opacity-40 animate-float delay-1000">🧸</div>
+            <div className="absolute bottom-16 left-16 text-lg opacity-40 animate-float delay-2000">🧁</div>
 
-          <div className="space-y-8">
-            
-            {/* CARD 1: EXTINGUISH THE CANDLES STAGE */}
-            {(state.interactiveChallenge === "cake" || state.interactiveChallenge === "all") && (
-              <div className={`${themeStyle.card} p-8 text-center`}>
-                <div className="flex justify-center mb-4">
-                  <div className="p-3 bg-rose-100 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 rounded-full text-rose-500 shadow-sm">
-                    <Sparkles className="w-6 h-6 animate-pulse" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-black mb-2">The Birthday Cake </h3>
-                <p className={`${themeStyle.body} text-sm max-w-md mx-auto mb-6`}>
-                  Let's start! Blow the candles or tap on them to make your birthday wish and unwrap your special letters!
-                </p>
-                {renderInteractiveCake()}
-              </div>
-            )}
-
-            {/* BALLOON POP CHALLENGE BANNER */}
-            {(state.interactiveChallenge === "balloons" || state.interactiveChallenge === "all") && (
-              <div className={`${themeStyle.card} p-8 text-center relative overflow-hidden`}>
-                <h3 className="text-xl font-black mb-2 flex items-center justify-center space-x-2">
-                  <span>🎈 Hovering Surprise Balloons</span>
-                </h3>
-                <p className={`${themeStyle.body} text-sm mb-4`}>
-                  Pop the floating helium balloons drifting across your viewport to discover cute, personalized quotes and birthday wishes!
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 py-1 px-3.5 rounded-full border border-slate-200 dark:border-slate-700/50">
-                    Remaining: {balloons.filter(b => !b.popped).length} Balloons
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* CARD 2: REVEAL PERSONAL MESSAGE GIFTBOX */}
-            <div className={`${themeStyle.card} p-8 text-center relative overflow-hidden`}>
+            {/* Main Polaroid Deck */}
+            <motion.div 
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-gradient-to-tr from-[#fff1f3] via-[#faf6fe] to-[#f0f9ff] text-pink-950 rounded-[32px] border-4 border-[#4c0519] shadow-[10px_10px_0px_#4c0519] p-6 md:p-10 relative overflow-hidden flex flex-col justify-between min-h-[550px] md:min-h-[580px]"
+            >
               <AnimatePresence mode="wait">
-                {!giftDiscovered ? (
-                  /* GIFT UNOPENED SCREEN */
+                {pinterestPage === 1 && (
                   <motion.div
-                    key="closed"
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.95, opacity: 0 }}
-                    className="py-10"
+                    key="p1"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    className="flex flex-col items-center justify-center text-center py-6 space-y-6"
                   >
-                    <div className="flex justify-center mb-6">
-                      <motion.div
-                        animate={{
-                          rotate: [-3, 3, -3],
-                          scale: [1, 1.05, 1],
+                    <motion.span 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="text-xs font-bold font-mono text-rose-500 bg-white/80 border border-rose-200 px-4 py-1.5 rounded-full tracking-wider animate-pulse-gentle shadow-xs"
+                    >
+                      {state.pinterestHeroBadge || "♡ a birthday surprise"}
+                    </motion.span>
+                    
+                    <div className="space-y-3">
+                      <h1 className="text-3xl md:text-5xl font-serif font-bold text-rose-600/90 tracking-tight lowercase pt-2 leading-tight">
+                        {state.pinterestHeroHeading || "a little something for you"}
+                      </h1>
+                      <p className="text-xs md:text-sm text-slate-500/80 font-mono tracking-tight lowercase">
+                        {state.pinterestHeroSubtitle || "happy birthday ♡"}
+                      </p>
+                    </div>
+
+                    {/* Elegant Cupcake */}
+                    <div className="relative py-2 flex flex-col items-center">
+                      <motion.div 
+                        animate={{ y: [0, -6, 0] }}
+                        transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
+                        className="text-7xl cursor-pointer select-none"
+                        onClick={() => {
+                          synth.playSparkle();
+                          confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } });
                         }}
-                        transition={{
-                          repeat: Infinity,
-                          duration: 2.5,
-                          ease: "easeInOut",
-                        }}
-                        onClick={openGiftBox}
-                        className="cursor-pointer p-6 bg-gradient-to-br from-indigo-500 to-rose-500 border-4 border-slate-900 rounded-3xl text-white shadow-[0_10px_25px_rgba(99,102,241,0.3)] hover:brightness-110 active:scale-95 transition-all text-center relative"
                       >
-                        <Gift className="w-20 h-20 fill-white/10" />
-                        <div className="absolute -top-3 -right-3 bg-yellow-400 text-slate-900 font-extrabold text-xs py-1 px-2.5 rounded-full border-2 border-slate-900 animate-bounce">
-                          TAP ME!
-                        </div>
+                        🧁
                       </motion.div>
+                      <div className="w-16 h-1 w-full bg-[#4c0519]/5 blur-[2px] rounded-full mx-auto mt-2" />
+                      <span className="text-[10px] text-slate-400 font-mono mt-3 uppercase tracking-widest animate-pulse">tap vanilla cupcake</span>
                     </div>
-
-                    <h4 className="text-lg font-black mb-1">A Sealed Gift Letter</h4>
-                    <p className={`${themeStyle.body} text-xs max-w-sm mx-auto mb-4`}>
-                      Click the magical virtual gift box above to open, unwrap, and reveal the heartfelt custom message inside!
-                    </p>
-
-                    {state.giftClue && (
-                      <div className="bg-slate-50 dark:bg-slate-950/50 rounded-xl p-3 max-w-sm mx-auto border border-dashed border-slate-200 dark:border-slate-850">
-                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block mb-0.5">Mystery Clue</span>
-                        <p className="text-xs italic text-slate-500 dark:text-slate-400">"{state.giftClue}"</p>
-                      </div>
-                    )}
                   </motion.div>
-                ) : (
-                  /* GIFT REVEALED LETTER STAGE */
-                  <motion.div
-                    key="opened"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-left"
-                  >
-                    {/* The Unboxed Letter Frame */}
-                    <div className="flex flex-col items-center mb-6 pb-6 border-b border-dashed border-slate-200 dark:border-slate-800">
-                      {renderAvatar()}
-                      <h4 className="text-2xl font-black mt-4 tracking-tight">For {state.recipientName}</h4>
-                      {state.relationship && (
-                        <span className="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 py-1 px-3.5 rounded-full font-bold mt-1.5 font-mono">
-                          From: Your {state.relationship}
-                        </span>
-                      )}
-                    </div>
+                )}
 
-                    {/* Letter Poem */}
-                    {state.poem && (
-                      <div className="bg-gradient-to-r from-rose-50/50 to-indigo-50/50 dark:from-rose-950/20 dark:to-indigo-950/20 rounded-2xl p-6 border border-slate-250/20 dark:border-slate-800/40 mb-6 text-center shadow-inner relative">
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 absolute top-2 left-1/2 transform -translate-x-1/2">
-                          Special Rhyme
-                        </span>
-                        <p className="text-sm italic font-serif leading-loose whitespace-pre-line text-slate-800 dark:text-slate-200 mt-2">
-                          {state.poem}
+                {pinterestPage === 2 && (
+                  <motion.div
+                    key="p2"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    className="flex flex-col justify-between py-2 space-y-4 w-full"
+                  >
+                    <div className="bg-white/80 rounded-3xl p-6 md:p-8 shadow-sm border border-rose-100 relative max-w-md mx-auto w-full">
+                      {/* Decorative Tape */}
+                      <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2 w-28 h-7 bg-rose-200/50 border border-rose-300/30 rotate-1 rounded-sm shadow-xs flex items-center justify-center">
+                        <span className="text-[8px] tracking-wider text-rose-800/80 uppercase font-sans font-black">sealed with love</span>
+                      </div>
+
+                      <div className="space-y-4 pt-3 text-center">
+                        <h3 className="text-2xl font-serif font-black text-rose-600 tracking-tight leading-none pt-2">
+                          {state.pinterestLetterTitle || "Happy Birthday"}
+                        </h3>
+                        
+                        <p className="text-xs md:text-sm text-slate-705 font-serif leading-relaxed tracking-wider lowercase italic whitespace-pre-wrap">
+                          {state.pinterestLetterParagraph || "happy birthday to my favourite human. thank you for bringing so much light and warm laughter into my life. i cherish every tiny moment we share together, from the quiet walks to the chaotic plans."}
                         </p>
                       </div>
-                    )}
-
-                    {/* Letter Message Body */}
-                    <div className={`${themeStyle.body} space-y-4 whitespace-pre-wrap text-md bg-white/20 dark:bg-slate-950/20 p-6 rounded-2xl border border-white/10`}>
-                      {state.customMessage || "Wishing you an absolutely magical birthday! May this year ahead bless you with incredible happiness, vibrant health, compiler-clean code, and great fortunes. Let's celebrate to your heart's desire! 🎂✨"}
                     </div>
 
-                    <div className="flex justify-center mt-6">
-                      <div className="inline-flex items-center space-x-1.5 text-rose-500 font-extrabold text-xs">
-                        <Heart className="w-4 h-4 fill-rose-500 animate-pulse" />
-                        <span>Forever Wishing of You</span>
+                    {/* Tape deck Cassette player */}
+                    <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-100/30 flex items-center gap-3.5 max-w-sm mx-auto w-full">
+                      <button 
+                        onClick={() => {
+                          if (audioPlaying) {
+                            synth.stopMusic();
+                            setAudioPlaying(false);
+                          } else {
+                            synth.startMusic(state.music || "piano");
+                            setAudioPlaying(true);
+                          }
+                        }}
+                        className={`p-2.5 rounded-full cursor-pointer transition-colors ${audioPlaying ? 'bg-rose-450 text-white animate-spin-slow' : 'bg-slate-200 text-slate-600'}`}
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] font-bold text-purple-600 uppercase tracking-widest block font-mono">soundtrack chosen 🎵</span>
+                        <span className="text-[10px] text-slate-500 font-serif italic tracking-tight leading-snug truncate block lowercase">
+                          {state.pinterestSongCaption || "press play — i picked this song because it always reminds me of you."}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {pinterestPage === 3 && (
+                  <motion.div
+                    key="p3"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    className="py-2 w-full"
+                  >
+                    <div className="text-center mb-5">
+                      <span className="text-[10px] font-bold font-mono tracking-widest text-rose-500 uppercase block mb-1">Polaroid Stack</span>
+                      <h3 className="text-xl md:text-2xl font-serif font-bold text-rose-600 lowercase tracking-tight leading-none mb-1">our little album</h3>
+                      <p className="text-[10px] text-slate-500 lowercase font-medium">a few of my favourite moments with you ♡</p>
+                    </div>
+
+                    {/* Stack of Polaroids */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
+                      {/* Polaroid 1 */}
+                      <motion.div 
+                        whileHover={{ rotate: -2, y: -4 }}
+                        className="bg-white p-3 pb-5 rounded-md border border-slate-200/50 shadow-md rotate-1 flex flex-col justify-between"
+                      >
+                        <div className="aspect-square bg-rose-50/80 rounded-xs overflow-hidden flex items-center justify-center relative border border-slate-100/60 shadow-inner">
+                          {state.avatarUrl && state.avatarUrl !== "kitty" ? (
+                            <img 
+                              src={state.avatarUrl} 
+                              alt="Memory 1" 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <span className="text-4xl animate-bounce">🧁</span>
+                          )}
+                        </div>
+                        <p className="text-[9px] font-serif tracking-tight text-center text-slate-500/90 mt-2.5 h-8 overflow-hidden leading-tight lowercase">
+                          {state.pinterestMemory1 || "the bright smiles we share whenever we meet up ♡"}
+                        </p>
+                      </motion.div>
+
+                      {/* Polaroid 2 */}
+                      <motion.div 
+                        whileHover={{ rotate: 1, y: -4 }}
+                        className="bg-white p-3 pb-5 rounded-md border border-slate-200/50 shadow-md -rotate-1 flex flex-col justify-between"
+                      >
+                        <div className="aspect-square bg-purple-50 rounded-xs overflow-hidden flex items-center justify-center relative border border-slate-100/60 shadow-inner">
+                          <span className="text-4xl animate-pulse">🌌</span>
+                        </div>
+                        <p className="text-[9px] font-serif tracking-tight text-center text-slate-500/90 mt-2.5 h-8 overflow-hidden leading-tight lowercase">
+                          {state.pinterestMemory2 || "sipping cozy lattes and losing track of time talking about everything..."}
+                        </p>
+                      </motion.div>
+
+                      {/* Polaroid 3 */}
+                      <motion.div 
+                        whileHover={{ rotate: -1, y: -4 }}
+                        className="bg-white p-3 pb-5 rounded-md border border-slate-200/50 shadow-md rotate-2 flex flex-col justify-between"
+                      >
+                        <div className="aspect-square bg-blue-50 rounded-xs overflow-hidden flex items-center justify-center relative border border-slate-100/60 shadow-inner">
+                          <span className="text-4xl">🧸</span>
+                        </div>
+                        <p className="text-[9px] font-serif tracking-tight text-center text-slate-500/90 mt-2.5 h-8 overflow-hidden leading-tight lowercase">
+                          {state.pinterestMemory3 || "just really, truly thankful that i get to spend another year by your side"}
+                        </p>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {pinterestPage === 4 && (
+                  <motion.div
+                    key="p4"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    className="py-2 max-w-md mx-auto w-full"
+                  >
+                    <div className="bg-white/85 rounded-3xl p-6 md:p-8 border border-rose-100 shadow-xs space-y-4">
+                      <span className="text-[10px] font-bold text-[#f43f5e] font-mono tracking-widest block uppercase">a page dedicated of wishes</span>
+                      
+                      {/* Checklist */}
+                      <div className="space-y-2.5 font-sans">
+                        <label className="flex items-center space-x-3 text-[11px] font-semibold text-slate-700">
+                          <Check className="w-3.5 h-3.5 text-white bg-rose-450 border border-rose-300 rounded-full p-0.5" />
+                          <span>thank you for your infinite patience with me 🌸</span>
+                        </label>
+                        <label className="flex items-center space-x-3 text-[11px] font-semibold text-slate-700">
+                          <Check className="w-3.5 h-3.5 text-white bg-rose-450 border border-rose-300 rounded-full p-0.5" />
+                          <span>thank you for our sweet late-night chats 🍵</span>
+                        </label>
+                        <label className="flex items-center space-x-3 text-[11px] font-semibold text-slate-700">
+                          <Check className="w-3.5 h-3.5 text-white bg-rose-450 border border-rose-300 rounded-full p-0.5" />
+                          <span>thank you for silly inside jokes we can't explain 🧸</span>
+                        </label>
+                        <label className="flex items-center space-x-3 text-[11px] font-semibold text-slate-700">
+                          <Check className="w-3.5 h-3.5 text-white bg-rose-450 border border-rose-300 rounded-full p-0.5" />
+                          <span>thank you for just genuinely being yourself ♡</span>
+                        </label>
+                      </div>
+
+                      <div className="pt-4 border-t border-dashed border-rose-100">
+                        <p className="text-xs md:text-sm text-slate-650 font-serif leading-relaxed italic lowercase">
+                          {state.pinterestWishParagraph || "thank you for being you — for the infinite patience, the late-night heart-to-hearts, the silly inside jokes, and for making my days so much brighter!"}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {pinterestPage === 5 && (
+                  <motion.div
+                    key="p5"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    className="py-2 max-w-md mx-auto w-full"
+                  >
+                    <div className="bg-stone-50 border border-stone-200 p-6 md:p-8 rounded-3xl shadow-xs space-y-4 font-serif text-slate-800 overflow-hidden relative">
+                      {/* Postage Stamps */}
+                      <div className="absolute top-4 right-4 w-12 h-14 bg-rose-50 border border-dashed border-rose-300 flex flex-col items-center justify-center p-1 font-sans rotate-6 shadow-xs select-none">
+                        <span className="text-[7px] text-rose-400 font-black tracking-tighter block uppercase">Love Airmail</span>
+                        <span className="text-sm mt-1">💌</span>
+                      </div>
+
+                      <div className="pt-2 space-y-4">
+                        <h4 className="text-xl font-bold text-rose-600 lowercase tracking-tight leading-none pt-2">
+                          {state.pinterestFinalTitle || "happy birthday ♡"}
+                        </h4>
+                        <p className="text-xs md:text-sm leading-relaxed italic whitespace-pre-wrap lowercase text-slate-700">
+                          {state.pinterestFinalLetter || "happy birthday once again. i hope this new chapter brings you so many cozy afternoons, sweet achievements, and gentle smiles. i'll always be here to support you."}
+                        </p>
+                        <div className="pt-1 text-right">
+                          <span className="text-xs font-sans text-rose-400 font-black tracking-widest block italic">with love, forever ♡</span>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* CARD DECK PAGINATION CONTROLS */}
+              <div className="mt-8 pt-4 border-t border-[#4c0519]/10 flex items-center justify-between w-full">
+                <button
+                  type="button"
+                  disabled={pinterestPage === 1}
+                  onClick={() => setPinterestPage(p => Math.max(1, p - 1))}
+                  className="px-3.5 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 rounded-lg font-bold border border-rose-100 disabled:opacity-40 cursor-pointer"
+                >
+                  ← Back
+                </button>
+
+                {/* Page dots indicator */}
+                <div className="flex items-center space-x-1.5 select-none">
+                  {[1,2,3,4,5].map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPinterestPage(pageNum)}
+                      className={`w-2 h-2 rounded-full cursor-pointer transition-all ${pinterestPage === pageNum ? 'bg-rose-500 scale-120' : 'bg-slate-300/60'}`}
+                    />
+                  ))}
+                </div>
+
+                {pinterestPage < 5 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      synth.playSparkle();
+                      setPinterestPage(p => p + 1);
+                    }}
+                    className="px-3.5 py-1.5 text-xs text-white bg-rose-500 hover:bg-rose-600 rounded-lg font-bold shadow-xs flex items-center space-x-1 cursor-pointer"
+                  >
+                    <span>Next</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      synth.playCheer();
+                      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                      restartCelebrate();
+                    }}
+                    className="px-3.5 py-1.5 text-xs text-white bg-slate-900 hover:bg-slate-800 rounded-lg font-bold flex items-center space-x-1 cursor-pointer shadow-md"
+                  >
+                    <span>Finish! ♡</span>
+                  </button>
+                )}
+              </div>
+            </motion.div>
+
+            {/* RETRY / RESET CELEBRATION CONTROL */}
+            {pinterestPage === 5 && (
+              <div className="text-center mt-6">
+                <button
+                  onClick={restartCelebrate}
+                  className="rounded-full px-5 py-2 text-xs flex items-center space-x-2 mx-auto justify-center bg-white hover:bg-slate-50 border border-rose-100 text-rose-600 font-bold shadow-sm cursor-pointer transition-transform active:scale-95"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>{isInteractivePreview ? "Reset Interactive Preview" : "Play Surprises Again"}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* MAIN CARDS CONTENT CONTAINER FOR STANDARD QUESTS */
+          <div className="max-w-2xl mx-auto px-4 py-16 flex flex-col justify-center min-h-screen relative z-20">
+            
+            {/* TITLE HEADER */}
+            <div className="text-center mb-8">
+              <span className="text-xs font-bold font-mono tracking-widest text-[#f43f5e] uppercase bg-rose-50 dark:bg-rose-950/40 py-1.5 px-4 rounded-full border border-rose-100 dark:border-rose-900/30">
+                Happy Birthday, {state.recipientName}! {state.recipientAge ? `• Age ${state.recipientAge}` : ""}
+              </span>
+              <h2 className={`${themeStyle.heading} mt-3`}>
+                Happy Birthday Wish {state.recipientAge ? `🎂` : "🎈"}
+              </h2>
+            </div>
+
+            <div className="space-y-8">
+              
+              {/* CARD 1: EXTINGUISH THE CANDLES STAGE */}
+              {(state.interactiveChallenge === "cake" || state.interactiveChallenge === "all") && (
+                <div className={`${themeStyle.card} p-8 text-center`}>
+                  <div className="flex justify-center mb-4">
+                    <div className="p-3 bg-rose-100 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 rounded-full text-rose-500 shadow-sm">
+                      <Sparkles className="w-6 h-6 animate-pulse" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-black mb-2">The Birthday Cake </h3>
+                  <p className={`${themeStyle.body} text-sm max-w-md mx-auto mb-6`}>
+                    Let's start! Blow the candles or tap on them to make your birthday wish and unwrap your special letters!
+                  </p>
+                  {renderInteractiveCake()}
+                </div>
+              )}
+
+              {/* BALLOON POP CHALLENGE BANNER */}
+              {(state.interactiveChallenge === "balloons" || state.interactiveChallenge === "all") && (
+                <div className={`${themeStyle.card} p-8 text-center relative overflow-hidden`}>
+                  <h3 className="text-xl font-black mb-2 flex items-center justify-center space-x-2">
+                    <span>🎈 Hovering Surprise Balloons</span>
+                  </h3>
+                  <p className={`${themeStyle.body} text-sm mb-4`}>
+                    Pop the floating helium balloons drifting across your viewport to discover cute, personalized quotes and birthday wishes!
+                  </p>
+                  <div className="flex justify-center space-x-4">
+                    <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 py-1 px-3.5 rounded-full border border-slate-200 dark:border-slate-700/50">
+                      Remaining: {balloons.filter(b => !b.popped).length} Balloons
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* CARD 2: REVEAL PERSONAL MESSAGE GIFTBOX */}
+              <div className={`${themeStyle.card} p-8 text-center relative overflow-hidden`}>
+                <AnimatePresence mode="wait">
+                  {!giftDiscovered ? (
+                    /* GIFT UNOPENED SCREEN */
+                    <motion.div
+                      key="closed"
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.95, opacity: 0 }}
+                      className="py-10"
+                    >
+                      <div className="flex justify-center mb-6">
+                        <motion.div
+                          animate={{
+                            rotate: [-3, 3, -3],
+                            scale: [1, 1.05, 1],
+                          }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 2.5,
+                            ease: "easeInOut",
+                          }}
+                          onClick={openGiftBox}
+                          className="cursor-pointer p-6 bg-gradient-to-br from-indigo-500 to-rose-500 border-4 border-slate-900 rounded-3xl text-white shadow-[0_10px_25px_rgba(99,102,241,0.3)] hover:brightness-110 active:scale-95 transition-all text-center relative"
+                        >
+                          <Gift className="w-20 h-20 fill-white/10" />
+                          <div className="absolute -top-3 -right-3 bg-yellow-400 text-slate-900 font-extrabold text-xs py-1 px-2.5 rounded-full border-2 border-slate-900 animate-bounce">
+                            TAP ME!
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      <h4 className="text-lg font-black mb-1">A Sealed Gift Letter</h4>
+                      <p className={`${themeStyle.body} text-xs max-w-sm mx-auto mb-4`}>
+                        Click the magical virtual gift box above to open, unwrap, and reveal the heartfelt custom message inside!
+                      </p>
+
+                      {state.giftClue && (
+                        <div className="bg-slate-50 dark:bg-slate-950/50 rounded-xl p-3 max-w-sm mx-auto border border-dashed border-slate-200 dark:border-slate-850">
+                          <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block mb-0.5">Mystery Clue</span>
+                          <p className="text-xs italic text-slate-500 dark:text-slate-400">"{state.giftClue}"</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  ) : (
+                    /* GIFT REVEALED LETTER STAGE */
+                    <motion.div
+                      key="opened"
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-left"
+                    >
+                      {/* The Unboxed Letter Frame */}
+                      <div className="flex flex-col items-center mb-6 pb-6 border-b border-dashed border-slate-200 dark:border-slate-800">
+                        {renderAvatar()}
+                        <h4 className="text-2xl font-black mt-4 tracking-tight">For {state.recipientName}</h4>
+                        {state.relationship && (
+                          <span className="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 py-1 px-3.5 rounded-full font-bold mt-1.5 font-mono">
+                            From: Your {state.relationship}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Letter Poem */}
+                      {state.poem && (
+                        <div className="bg-gradient-to-r from-rose-50/50 to-indigo-50/50 dark:from-rose-950/20 dark:to-indigo-950/20 rounded-2xl p-6 border border-slate-250/20 dark:border-slate-800/40 mb-6 text-center shadow-inner relative">
+                          <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 absolute top-2 left-1/2 transform -translate-x-1/2">
+                            Special Rhyme
+                          </span>
+                          <p className="text-sm italic font-serif leading-loose whitespace-pre-line text-slate-800 dark:text-slate-200 mt-2">
+                            {state.poem}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Letter Message Body */}
+                      <div className={`${themeStyle.body} space-y-4 whitespace-pre-wrap text-md bg-white/20 dark:bg-slate-950/20 p-6 rounded-2xl border border-white/10`}>
+                        {state.customMessage || "Wishing you an absolutely magical birthday! May this year ahead bless you with incredible happiness, vibrant health, compiler-clean code, and great fortunes. Let's celebrate to your heart's desire! 🎂✨"}
+                      </div>
+
+                      <div className="flex justify-center mt-6">
+                        <div className="inline-flex items-center space-x-1.5 text-rose-500 font-extrabold text-xs">
+                          <Heart className="w-4 h-4 fill-rose-500 animate-pulse" />
+                          <span>Forever Wishing of You</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* RETRY / RESET CELEBRATION CONTROL */}
+            <div className="text-center mt-8">
+              <button
+                onClick={restartCelebrate}
+                className={`rounded-full px-5 py-2 text-xs flex items-center space-x-2 mx-auto justify-center border transition-all ${themeStyle.secondaryButton}`}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>{isInteractivePreview ? "Reset Interactive Preview" : "Play Surprises Again"}</span>
+              </button>
             </div>
           </div>
-
-          {/* RETRY / RESET CELEBRATION CONTROL */}
-          <div className="text-center mt-8">
-            <button
-              onClick={restartCelebrate}
-              className={`rounded-full px-5 py-2 text-xs flex items-center space-x-2 mx-auto justify-center border transition-all ${themeStyle.secondaryButton}`}
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>{isInteractivePreview ? "Reset Interactive Preview" : "Play Surprises Again"}</span>
-            </button>
-          </div>
-        </div>
+        )
       )}
     </div>
   );

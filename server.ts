@@ -35,7 +35,7 @@ function getAi() {
 // API endpoint to suggest custom wishes via server-side Gemini 3.5 Flash
 app.post("/api/suggest-wish", async (req, res) => {
   try {
-    const { name, age, relationship, interests, tone } = req.body;
+    const { name, age, relationship, interests, tone, isPinterest, memories, favouriteThings, song } = req.body;
 
     if (!name) {
       res.status(400).json({ error: "Recipient name is required" });
@@ -63,37 +63,141 @@ app.post("/api/suggest-wish", async (req, res) => {
       cute: "Super cute, simple, sweet, and adorable. Friendly emojis, high cheering spirit, and straightforward birthday joy.",
     }[tone as "emotional" | "funny" | "poetic" | "cute"] || "Cute, positive, and delightful.";
 
-    const promptString = `Draft beautiful individualized birthday wishes for ${name} ${agePhrase}, who is my ${relationship} ${interestsPhrase}.
+    let promptString = "";
+    let responseSchemaProperties: Record<string, any> = {
+      wish: {
+        type: Type.STRING,
+        description: "The main beautifully formatted birthday wishes letter (around 2-3 paragraphs or structured paragraphs). Keep it personal, highly detailed, and engaging.",
+      },
+      shortQuote: {
+        type: Type.STRING,
+        description: "A short, cute, catchy 1-sentence greeting (e.g. 'To the coffee-fueled MVP of my life!'). Ideal for showing inside a popped balloon.",
+      },
+      poem: {
+        type: Type.STRING,
+        description: "A gorgeous 4-line rhythmic, rhyming birthday poem specifically customized with details of their relationship, age, or interests.",
+      },
+      giftClue: {
+        type: Type.STRING,
+        description: "A playful, tiny, intriguing interactive joke clue about what could be inside their виртуальный gift box (e.g., 'An infinite supply of caffeine and virtual hugs!').",
+      }
+    };
+    let requiredFields = ["wish", "shortQuote", "poem", "giftClue"];
+
+    if (isPinterest) {
+      promptString = `You are designing a cute pastel Pinterest birthday card website.
+Draft custom sweet, warm, soft, emotional, and personal text for the sections of a multi-step Birthday Greeting Card website.
+Use lowercase letters when suitable to give a sweet handwritten, genuine note feeling.
+Recipient: ${name} (who is turning ${age || 'this year'} years old)
+Relationship: ${relationship}
+Special memories with them: "${memories || 'none specified'}"
+Their favorite things: "${favouriteThings || interests || 'none specified'}"
+Background Song chosen: "${song || 'piano'}"
+
+Please generate specific creative contents for these 5 exact sections:
+1. HERO PAGE:
+   - Badge text: A short minimal badge starting with "♡" (e.g. "♡ a birthday surprise" or similar sweet badge).
+   - Heading: Main visual cute lowercase phrase (e.g., "a little something for you" or similar).
+   - Subtitle: Lowkey heartfelt caption (e.g., "happy birthday ♡" or similar).
+2. OPEN LETTER PAGE:
+   - Heartfelt paragraph: A warm, soft, personal letter paragraph (40-60 words).
+   - Song caption: A caption mentioning the song "${song || 'this song'}" (e.g., "press play — i picked this one because it always reminds me of you." or custom playful caption).
+3. OUR LITTLE ALBUM:
+   - Memory captions: Three memories based on the provided memories and favorite things:
+     * Memory 1: Short cute line about smiles, laughter, or the first memory.
+     * Memory 2: Short line about a favourite customized moment together.
+     * Memory 3: A thankful emotional, heartwarming line looking back.
+4. WISH PAGE:
+   - Wish paragraph: A sweet, cozy, handwritten feeling birthday wish (around 50 words) thanking them for things like patience, late-night talks, silly inside jokes, and being themselves.
+5. FINAL LETTER PAGE:
+   - Title: E.g., "happy birthday ${name} ♡" (or similar sweet title).
+   - Final letter: A beautiful emotional birthday letter (80-120 words) that feels extremely genuine, soft, romantic/wholesome, warm, like a handwritten letter.
+
+Make sure the output matches the requested JSON schema.`;
+
+      responseSchemaProperties = {
+        ...responseSchemaProperties,
+        pinterestHeroBadge: {
+          type: Type.STRING,
+          description: "Small badge text starting with '♡' (e.g. '♡ a birthday surprise')",
+        },
+        pinterestHeroHeading: {
+          type: Type.STRING,
+          description: "Main bold visual heading in lowercase (e.g. 'a little something for you')",
+        },
+        pinterestHeroSubtitle: {
+          type: Type.STRING,
+          description: "Aesthetic subtitle (e.g. 'happy birthday ♡')",
+        },
+        pinterestLetterTitle: {
+          type: Type.STRING,
+          description: "Title of the open letter page (e.g. 'Happy Birthday')",
+        },
+        pinterestLetterParagraph: {
+          type: Type.STRING,
+          description: "Short heartfelt paragraph (40-60 words) that is incredibly sweet, warm, and personal.",
+        },
+        pinterestSongCaption: {
+          type: Type.STRING,
+          description: "A cute note about the song (e.g. 'press play — i picked this one because it always reminds me of you.')",
+        },
+        pinterestMemory1: {
+          type: Type.STRING,
+          description: "Memory Caption 1: Short cute line about smiles, happiness, or a specific user-provided memory.",
+        },
+        pinterestMemory2: {
+          type: Type.STRING,
+          description: "Memory Caption 2: Short line about a favourite customized moment together.",
+        },
+        pinterestMemory3: {
+          type: Type.STRING,
+          description: "Memory Caption 3: Thankful emotional line expressing how happy you are to have them.",
+        },
+        pinterestWishParagraph: {
+          type: Type.STRING,
+          description: "A sweet birthday wish of around 50 words: 'thank you for being you — for the patience, the late-night talks...'",
+        },
+        pinterestFinalTitle: {
+          type: Type.STRING,
+          description: "Aesthetic lowercase title for final card page (e.g. 'happy birthday ♡')",
+        },
+        pinterestFinalLetter: {
+          type: Type.STRING,
+          description: "A beautiful emotional birthday letter of 80-120 words. Feels like a handwritten note, lowercase when suitable.",
+        },
+      };
+
+      requiredFields = [
+        ...requiredFields,
+        "pinterestHeroBadge",
+        "pinterestHeroHeading",
+        "pinterestHeroSubtitle",
+        "pinterestLetterTitle",
+        "pinterestLetterParagraph",
+        "pinterestSongCaption",
+        "pinterestMemory1",
+        "pinterestMemory2",
+        "pinterestMemory3",
+        "pinterestWishParagraph",
+        "pinterestFinalTitle",
+        "pinterestFinalLetter"
+      ];
+    } else {
+      promptString = `Draft beautiful individualized birthday wishes for ${name} ${agePhrase}, who is my ${relationship} ${interestsPhrase}.
 Specific style requirements: ${toneDescription}
 The response should be standard JSON matching the requested schema. Provide custom creative text.`;
+    }
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: promptString,
       config: {
-        systemInstruction: "You are a professional, charming card designer and birthday greeting planner. Help write unique, customized birthday wishes with custom poems and funny short balloon messages.",
+        systemInstruction: "You are a professional, charming, cozy Pinterest-style greeting card planner. Help write unique, customized birthday wishes, letters, and cute memories with whimsical, sweet lowercase phrasing and adorable pixel-art/kawaii feelings.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
-          properties: {
-            wish: {
-              type: Type.STRING,
-              description: "The main beautifully formatted birthday wishes letter (around 2-3 paragraphs or structured paragraphs). Keep it personal, highly detailed, and engaging.",
-            },
-            shortQuote: {
-              type: Type.STRING,
-              description: "A short, cute, catchy 1-sentence greeting (e.g. 'To the coffee-fueled MVP of my life!'). Ideal for showing inside a popped balloon.",
-            },
-            poem: {
-              type: Type.STRING,
-              description: "A gorgeous 4-line rhythmic, rhyming birthday poem specifically customized with details of their relationship, age, or interests.",
-            },
-            giftClue: {
-              type: Type.STRING,
-              description: "A playful, tiny, intriguing interactive joke clue about what could be inside their виртуальный gift box (e.g., 'An infinite supply of caffeine and virtual hugs!').",
-            },
-          },
-          required: ["wish", "shortQuote", "poem", "giftClue"],
+          properties: responseSchemaProperties,
+          required: requiredFields,
         },
       },
     });

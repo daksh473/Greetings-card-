@@ -22,6 +22,25 @@ export interface BirthdayCardState {
   cakeType: CakeType;
   interests?: string;
   balloonCount?: number;
+  emotion?: "funny" | "emotional" | "poetic" | "cute" | "celebratory";
+
+  // Custom Pinterest Cute Pastel Card Fields
+  isPinterestCard?: boolean;
+  pinterestMemories?: string;
+  pinterestFavouriteThings?: string;
+  pinterestSong?: string;
+  pinterestHeroBadge?: string;
+  pinterestHeroHeading?: string;
+  pinterestHeroSubtitle?: string;
+  pinterestLetterTitle?: string;
+  pinterestLetterParagraph?: string;
+  pinterestSongCaption?: string;
+  pinterestMemory1?: string;
+  pinterestMemory2?: string;
+  pinterestMemory3?: string;
+  pinterestWishParagraph?: string;
+  pinterestFinalTitle?: string;
+  pinterestFinalLetter?: string;
 }
 
 export interface SuggestionParams {
@@ -30,6 +49,10 @@ export interface SuggestionParams {
   relationship: string;
   interests: string;
   tone: "emotional" | "funny" | "poetic" | "cute";
+  isPinterest?: boolean;
+  memories?: string;
+  favouriteThings?: string;
+  song?: string;
 }
 
 export interface GeneratedWishResponse {
@@ -37,4 +60,18 @@ export interface GeneratedWishResponse {
   shortQuote: string;
   poem: string;
   giftClue: string;
+  
+  // Custom Pinterest fields
+  pinterestHeroBadge?: string;
+  pinterestHeroHeading?: string;
+  pinterestHeroSubtitle?: string;
+  pinterestLetterTitle?: string;
+  pinterestLetterParagraph?: string;
+  pinterestSongCaption?: string;
+  pinterestMemory1?: string;
+  pinterestMemory2?: string;
+  pinterestMemory3?: string;
+  pinterestWishParagraph?: string;
+  pinterestFinalTitle?: string;
+  pinterestFinalLetter?: string;
 }

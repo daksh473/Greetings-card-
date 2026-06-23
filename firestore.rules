@@ -1,38 +1,17 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default-deny catch-all safety net
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Helper functions
-    function isValidId(id) { 
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
-    }
-
-    function isValidCard(data) {
-      return data.keys().hasAll(['recipientName'])
-        && data.recipientName is string
-        && data.recipientName.size() <= 100
-        && (!data.keys().contains('recipientAge') || (data.recipientAge is string && data.recipientAge.size() <= 10))
-        && (!data.keys().contains('relationship') || (data.relationship is string && data.relationship.size() <= 50))
-        && (!data.keys().contains('theme') || (data.theme is string && data.theme.size() <= 50))
-        && (!data.keys().contains('music') || (data.music is string && data.music.size() <= 50))
-        && (!data.keys().contains('interactiveChallenge') || (data.interactiveChallenge is string && data.interactiveChallenge.size() <= 50))
-        && (!data.keys().contains('avatarUrl') || (data.avatarUrl is string && data.avatarUrl.size() <= 200000)) // allows up to 200kb text base64 photos
-        && (!data.keys().contains('customMessage') || (data.customMessage is string && data.customMessage.size() <= 5000))
-        && (!data.keys().contains('poem') || (data.poem is string && data.poem.size() <= 5000))
-        && (!data.keys().contains('giftClue') || (data.giftClue is string && data.giftClue.size() <= 1000))
-        && (!data.keys().contains('shortQuote') || (data.shortQuote is string && data.shortQuote.size() <= 1000))
-        && (!data.keys().contains('cakeType') || (data.cakeType is string && data.cakeType.size() <= 50))
-        && (!data.keys().contains('interests') || (data.interests is string && data.interests.size() <= 200));
-    }
-
     match /cards/{cardId} {
-      allow get: if isValidId(cardId);
-      allow create: if isValidId(cardId) && isValidCard(request.resource.data);
-      allow update, delete: if false; // Cards are immutable after generation
+      allow get: if true;
+      allow create: if cardId is string 
+        && cardId.size() <= 128
+        && request.resource.data.recipientName != null
+        && request.resource.data.recipientName is string;
+      allow update, delete: if false; // Cards are immutable once shared
     }
   }
 }

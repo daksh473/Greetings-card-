@@ -20,10 +20,29 @@ export default function BirthdayCardCreator() {
     shortQuote: "To the coffee-fueled coding MVP!",
     cakeType: "strawberry",
     interests: "coffee, video games, cats",
+    emotion: "cute",
+    
+    // Pinterest initial values matching Kawaii pastels
+    isPinterestCard: true,
+    pinterestMemories: "our late-night stargazing, that time we got lost finding that cute cafe, sharing cozy matcha lattes in the winter rain",
+    pinterestFavouriteThings: "matcha milk tea, animal crossing, lavender hoodies, tiny fluffy kittens",
+    pinterestSong: "love story - taylor swift",
+    pinterestHeroBadge: "♡ a birthday surprise",
+    pinterestHeroHeading: "a little something for you",
+    pinterestHeroSubtitle: "happy birthday ♡",
+    pinterestLetterTitle: "Happy Birthday",
+    pinterestLetterParagraph: "happy birthday to my favourite human. thank you for bringing so much light and warm laughter into my life. i cherish every tiny moment we share together, from the quiet walks to the chaotic plans. you mean the absolute world to me.",
+    pinterestSongCaption: "press play — i picked this song because it always, always reminds me of you.",
+    pinterestMemory1: "the bright smiles we share whenever we meet up ♡",
+    pinterestMemory2: "sipping cozy lattes and losing track of time talking about everything and nothing...",
+    pinterestMemory3: "just really, truly thankful that i get to spend another beautiful year by your side",
+    pinterestWishParagraph: "thank you for being you — for the infinite patience, the late-night heart-to-hearts, the silly inside jokes we can't explain, and for making my days so much brighter. i hope today surrounds you with the exact same sweet joy you spread.",
+    pinterestFinalTitle: "happy birthday ♡",
+    pinterestFinalLetter: "happy birthday once again. i hope this new chapter brings you so many cozy afternoons, sweet achievements, and gentle smiles. i'll always be here to support you, cheer for you, and celebrate all your happiest moments. have the most magical day ever!"
   });
 
   // 2. AI Wizard Suggestion Parameters
-  const [suggestionTone, setSuggestionTone] = useState<"emotional" | "funny" | "poetic" | "cute">("funny");
+  const [suggestionTone, setSuggestionTone] = useState<"emotional" | "funny" | "poetic" | "cute">("cute");
   const [aiLoading, setAiLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -118,6 +137,10 @@ export default function BirthdayCardCreator() {
           relationship: formState.relationship,
           interests: formState.interests,
           tone: suggestionTone,
+          isPinterest: formState.isPinterestCard,
+          memories: formState.pinterestMemories,
+          favouriteThings: formState.pinterestFavouriteThings,
+          song: formState.pinterestSong,
         }),
       });
 
@@ -134,6 +157,21 @@ export default function BirthdayCardCreator() {
         poem: data.poem || prev.poem,
         giftClue: data.giftClue || prev.giftClue,
         shortQuote: data.shortQuote || prev.shortQuote,
+        emotion: suggestionTone,
+        
+        // Map Pinterest fields if they exist
+        pinterestHeroBadge: data.pinterestHeroBadge || prev.pinterestHeroBadge,
+        pinterestHeroHeading: data.pinterestHeroHeading || prev.pinterestHeroHeading,
+        pinterestHeroSubtitle: data.pinterestHeroSubtitle || prev.pinterestHeroSubtitle,
+        pinterestLetterTitle: data.pinterestLetterTitle || prev.pinterestLetterTitle,
+        pinterestLetterParagraph: data.pinterestLetterParagraph || prev.pinterestLetterParagraph,
+        pinterestSongCaption: data.pinterestSongCaption || prev.pinterestSongCaption,
+        pinterestMemory1: data.pinterestMemory1 || prev.pinterestMemory1,
+        pinterestMemory2: data.pinterestMemory2 || prev.pinterestMemory2,
+        pinterestMemory3: data.pinterestMemory3 || prev.pinterestMemory3,
+        pinterestWishParagraph: data.pinterestWishParagraph || prev.pinterestWishParagraph,
+        pinterestFinalTitle: data.pinterestFinalTitle || prev.pinterestFinalTitle,
+        pinterestFinalLetter: data.pinterestFinalLetter || prev.pinterestFinalLetter,
       }));
 
     } catch (err: any) {
@@ -321,6 +359,44 @@ export default function BirthdayCardCreator() {
             <div className="flex items-center space-x-2 text-slate-800 dark:text-white font-extrabold pb-3 border-b border-dashed border-slate-100 dark:border-slate-800">
               <span className="text-sm bg-indigo-50 text-indigo-500 py-1 px-2 rounded">01</span>
               <h2 className="text-sm uppercase tracking-wider">Recipient Profile</h2>
+            </div>
+
+            {/* CARD TYPE SELECTION BAR */}
+            <div className="bg-gradient-to-r from-rose-50/80 to-purple-50/80 dark:from-rose-950/20 dark:to-fuchsia-950/20 p-4 rounded-2xl border border-rose-200/40 dark:border-rose-900/30 space-y-3">
+              <label className="block text-xs font-black text-rose-500 dark:text-rose-450 uppercase tracking-widest text-center">
+                🌸 Select Card Layout Vibe 🌸
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormState({ ...formState, isPinterestCard: true, theme: "pastel", emotion: "cute" })}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold font-sans tracking-wide border cursor-pointer text-center flex flex-col items-center justify-center gap-1 transition-all ${
+                    formState.isPinterestCard
+                      ? "bg-rose-400 border-rose-300 text-white shadow-sm scale-[1.01]"
+                      : "bg-white dark:bg-slate-900 border-slate-200 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="text-sm font-mono">🌸 PASTEL PINTEREST</span>
+                  <span className="text-[9px] font-medium opacity-90">Cute 5-Step Storybook</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormState({ ...formState, isPinterestCard: false })}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold font-sans tracking-wide border cursor-pointer text-center flex flex-col items-center justify-center gap-1 transition-all ${
+                    !formState.isPinterestCard
+                      ? "bg-indigo-600 border-indigo-500 text-white shadow-sm scale-[1.01]"
+                      : "bg-white dark:bg-slate-900 border-slate-200 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="text-sm font-mono">🎈 CLASSIC SURPRISE</span>
+                  <span className="text-[9px] font-medium opacity-90">Candle Cake & Giftbox</span>
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 text-center font-light leading-relaxed">
+                {formState.isPinterestCard
+                  ? "Bake cupcakes, pop customizable balloons, play sweet chiptunes, and flip through a gorgeous lavender polaroid album with personalized song titles!"
+                  : "A gamified quest with micro-interactions: blow out the candles, unwrap a sealed box, and discover a custom gift clue & poem."}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -561,56 +637,237 @@ export default function BirthdayCardCreator() {
           {/* SEC 3: GREETING WISH CUSTOMIZER PREVIEW (MANUAL SLIDERS) */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-250/60 dark:border-slate-800/80 p-6 shadow-sm space-y-4">
             <div className="flex items-center space-x-2 text-slate-800 dark:text-white font-extrabold pb-3 border-b border-dashed border-slate-100 dark:border-slate-800">
-              <span className="text-sm bg-indigo-50 text-indigo-500 py-1 px-2 rounded">03</span>
-              <h2 className="text-sm uppercase tracking-wider">Review Card Letter Content</h2>
+              <span className="text-sm bg-rose-50 text-rose-500 py-1 px-2 rounded">03</span>
+              <h2 className="text-sm uppercase tracking-wider">
+                {formState.isPinterestCard ? "Review Pinterest 5-Page Content" : "Review Card Letter Content"}
+              </h2>
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Primary Letter Wish (Or write your own)</label>
-                <textarea
-                  rows={4}
-                  placeholder="Type full custom birthday wishes here..."
-                  value={formState.customMessage}
-                  onChange={(e) => setFormState({ ...formState, customMessage: e.target.value })}
-                  className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-xs focus:outline-indigo-500"
-                />
-              </div>
+              {formState.isPinterestCard ? (
+                /* PINTEREST INTERACTIVE MULTI-PAGES FIELDS */
+                <div className="space-y-4">
+                  {/* Primary Inputs first */}
+                  <div className="p-3 bg-rose-50/40 dark:bg-rose-950/20 rounded-xl border border-rose-150/50 dark:border-rose-900/30 space-y-3">
+                    <span className="text-[10px] uppercase font-bold text-rose-500 tracking-wider font-sans">Primary Pinterest Inputs</span>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Our Special Memories (for Album Page) *</label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. our stargazing nights, getting lost in Tokyo, coffee chats..."
+                        value={formState.pinterestMemories}
+                        onChange={(e) => setFormState({ ...formState, pinterestMemories: e.target.value })}
+                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-lg text-slate-808 dark:text-white text-xs focus:outline-rose-405"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Their Favourite Things *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. matcha latte, cat, blankets"
+                          value={formState.pinterestFavouriteThings}
+                          onChange={(e) => setFormState({ ...formState, pinterestFavouriteThings: e.target.value })}
+                          className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-lg text-slate-808 dark:text-white text-xs focus:outline-rose-405"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Background Song Title *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. lover - taylor swift"
+                          value={formState.pinterestSong}
+                          onChange={(e) => setFormState({ ...formState, pinterestSong: e.target.value })}
+                          className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-lg text-slate-808 dark:text-white text-xs focus:outline-rose-405"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Rhyming Poem (Or short song)</label>
-                <textarea
-                  rows={3}
-                  placeholder="Type a beautiful 4-line rhyme stanzas..."
-                  value={formState.poem}
-                  onChange={(e) => setFormState({ ...formState, poem: e.target.value })}
-                  className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-xs font-serif leading-relaxed focus:outline-indigo-500"
-                />
-              </div>
+                  {/* 5-Step Story Board Pages */}
+                  <div className="space-y-4 border-l-2 border-dashed border-rose-200 dark:border-rose-900/40 pl-3">
+                    {/* PAGE 1: HERO */}
+                    <div className="bg-rose-50/10 p-3 rounded-lg border border-rose-100/30 dark:border-slate-850 space-y-2">
+                      <span className="text-[10px] font-bold text-rose-400 font-mono">STEP 1: HERO SCREEN</span>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[9px] font-medium text-slate-400">Badge Text</label>
+                          <input
+                            type="text"
+                            value={formState.pinterestHeroBadge}
+                            onChange={(e) => setFormState({ ...formState, pinterestHeroBadge: e.target.value })}
+                            className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] text-slate-800 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-medium text-slate-400">Heading</label>
+                          <input
+                            type="text"
+                            value={formState.pinterestHeroHeading}
+                            onChange={(e) => setFormState({ ...formState, pinterestHeroHeading: e.target.value })}
+                            className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] text-slate-800 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-medium text-slate-400">Subtitle</label>
+                          <input
+                            type="text"
+                            value={formState.pinterestHeroSubtitle}
+                            onChange={(e) => setFormState({ ...formState, pinterestHeroSubtitle: e.target.value })}
+                            className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] text-slate-800 dark:text-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Mystery Gift Box Hint</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. An invisible kitten cuddle"
-                    value={formState.giftClue}
-                    onChange={(e) => setFormState({ ...formState, giftClue: e.target.value })}
-                    className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-xs focus:outline-indigo-500"
-                  />
+                    {/* PAGE 2: OPEN LETTER */}
+                    <div className="bg-rose-50/10 p-3 rounded-lg border border-rose-100/30 dark:border-slate-850 space-y-2">
+                      <span className="text-[10px] font-bold text-rose-400 font-mono">STEP 2: ENVELOPE / OPEN LETTER</span>
+                      <div>
+                        <label className="block text-[9px] font-medium text-slate-400">Heading Title</label>
+                        <input
+                          type="text"
+                          value={formState.pinterestLetterTitle}
+                          onChange={(e) => setFormState({ ...formState, pinterestLetterTitle: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] mb-2 text-slate-800 dark:text-white"
+                        />
+                        <label className="block text-[9px] font-medium text-slate-400">Heartfelt Paragraph (40-65 words)</label>
+                        <textarea
+                          rows={3}
+                          value={formState.pinterestLetterParagraph}
+                          onChange={(e) => setFormState({ ...formState, pinterestLetterParagraph: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-2 rounded text-[11px] leading-relaxed text-slate-800 dark:text-white"
+                        />
+                        <label className="block text-[9px] font-medium text-slate-400 mt-1.5">Song Caption Note</label>
+                        <input
+                          type="text"
+                          value={formState.pinterestSongCaption}
+                          onChange={(e) => setFormState({ ...formState, pinterestSongCaption: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[10px] italic text-slate-800 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* PAGE 3: ALBUM */}
+                    <div className="bg-rose-50/10 p-3 rounded-lg border border-rose-100/30 dark:border-slate-850 space-y-2">
+                      <span className="text-[10px] font-bold text-rose-400 font-mono">STEP 3: OUR LITTLE POLAROID ALBUM</span>
+                      <div className="space-y-1.5">
+                        <div>
+                          <label className="block text-[9px] font-medium text-slate-400">Polaroid Caption 1</label>
+                          <input
+                            type="text"
+                            value={formState.pinterestMemory1}
+                            onChange={(e) => setFormState({ ...formState, pinterestMemory1: e.target.value })}
+                            className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] text-slate-800 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-medium text-slate-400">Polaroid Caption 2</label>
+                          <input
+                            type="text"
+                            value={formState.pinterestMemory2}
+                            onChange={(e) => setFormState({ ...formState, pinterestMemory2: e.target.value })}
+                            className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] text-slate-800 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-medium text-slate-400">Polaroid Caption 3</label>
+                          <input
+                            type="text"
+                            value={formState.pinterestMemory3}
+                            onChange={(e) => setFormState({ ...formState, pinterestMemory3: e.target.value })}
+                            className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] text-slate-800 dark:text-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* PAGE 4: WISH */}
+                    <div className="bg-rose-50/10 p-3 rounded-lg border border-rose-100/30 dark:border-slate-850 space-y-2">
+                      <span className="text-[10px] font-bold text-rose-400 font-mono">STEP 4: SWEET WISH PAGE</span>
+                      <div>
+                        <label className="block text-[9px] font-medium text-slate-400">Wish Text (~50 words)</label>
+                        <textarea
+                          rows={3}
+                          value={formState.pinterestWishParagraph}
+                          onChange={(e) => setFormState({ ...formState, pinterestWishParagraph: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-2 rounded text-[11px] leading-relaxed text-slate-800 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* PAGE 5: FINAL LETTER */}
+                    <div className="bg-rose-50/10 p-3 rounded-lg border border-rose-100/30 dark:border-slate-850 space-y-2">
+                      <span className="text-[10px] font-bold text-rose-400 font-mono">STEP 5: FINAL MEMORY CARD</span>
+                      <div>
+                        <label className="block text-[9px] font-medium text-slate-400">Final Card Title</label>
+                        <input
+                          type="text"
+                          value={formState.pinterestFinalTitle}
+                          onChange={(e) => setFormState({ ...formState, pinterestFinalTitle: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] mb-2 text-slate-800 dark:text-white"
+                        />
+                        <label className="block text-[9px] font-medium text-slate-400">Final Heartfelt Letter (~120 words)</label>
+                        <textarea
+                          rows={4}
+                          value={formState.pinterestFinalLetter}
+                          onChange={(e) => setFormState({ ...formState, pinterestFinalLetter: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-2 rounded text-[11px] leading-relaxed text-slate-800 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              ) : (
+                /* ORIGINAL STANDARD FORM FIELDS */
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Primary Letter Wish (Or write your own)</label>
+                    <textarea
+                      rows={4}
+                      placeholder="Type full custom birthday wishes here..."
+                      value={formState.customMessage}
+                      onChange={(e) => setFormState({ ...formState, customMessage: e.target.value })}
+                      className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-xs focus:outline-indigo-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Balloon Pop Catchphrase</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Best code-mate alive!"
-                    value={formState.shortQuote}
-                    onChange={(e) => setFormState({ ...formState, shortQuote: e.target.value })}
-                    className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-xs focus:outline-indigo-500"
-                  />
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Rhyming Poem (Or short song)</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Type a beautiful 4-line rhyme stanzas..."
+                      value={formState.poem}
+                      onChange={(e) => setFormState({ ...formState, poem: e.target.value })}
+                      className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-xs font-serif leading-relaxed focus:outline-indigo-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Mystery Gift Box Hint</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. An invisible kitten cuddle"
+                        value={formState.giftClue}
+                        onChange={(e) => setFormState({ ...formState, giftClue: e.target.value })}
+                        className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-xs focus:outline-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Balloon Pop Catchphrase</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Best code-mate alive!"
+                        value={formState.shortQuote}
+                        onChange={(e) => setFormState({ ...formState, shortQuote: e.target.value })}
+                        className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-xs focus:outline-indigo-500"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -619,6 +876,34 @@ export default function BirthdayCardCreator() {
             <div className="flex items-center space-x-2 text-slate-800 dark:text-white font-extrabold pb-3 border-b border-dashed border-slate-100 dark:border-slate-800">
               <span className="text-sm bg-indigo-50 text-indigo-500 py-1 px-2 rounded">04</span>
               <h2 className="text-sm uppercase tracking-wider">Aesthetic Theme & Music</h2>
+            </div>
+
+            {/* EMOTION PICKER */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Select Card Vibe / Emotion Style</label>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { id: "funny", emoji: "🤪", label: "Funny" },
+                  { id: "emotional", emoji: "❤️", label: "Emotional" },
+                  { id: "poetic", emoji: "📜", label: "Poetic" },
+                  { id: "cute", emoji: "🥰", label: "Cute" },
+                  { id: "celebratory", emoji: "🥂", label: "Celebration" },
+                ].map((em) => (
+                  <button
+                    key={em.id}
+                    type="button"
+                    onClick={() => setFormState({ ...formState, emotion: em.id as any })}
+                    className={`pb-1.5 pt-2 rounded-xl text-center border cursor-pointer flex flex-col items-center justify-center transition-all ${
+                      (formState.emotion || "funny") === em.id
+                        ? "bg-indigo-600 border-indigo-500 text-white scale-105 font-bold shadow-sm shadow-indigo-100 dark:shadow-none"
+                        : "bg-slate-50 dark:bg-slate-950 border-slate-150 hover:bg-slate-100 text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    <span className="text-xl mb-0.5">{em.emoji}</span>
+                    <span className="text-[9px] uppercase tracking-wider">{em.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* THEME PICKER */}
