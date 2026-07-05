@@ -26,6 +26,7 @@ export function decodeCardState(encoded: string): BirthdayCardState | null {
     
     // Ensure all required properties are present, apply defaults if necessary
     return {
+      ...parsed,
       recipientName: parsed.recipientName || "Friend",
       recipientAge: parsed.recipientAge !== undefined ? String(parsed.recipientAge) : "",
       relationship: parsed.relationship || "Friend",

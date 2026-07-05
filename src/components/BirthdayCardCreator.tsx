@@ -38,7 +38,26 @@ export default function BirthdayCardCreator() {
     pinterestMemory3: "just really, truly thankful that i get to spend another beautiful year by your side",
     pinterestWishParagraph: "thank you for being you — for the infinite patience, the late-night heart-to-hearts, the silly inside jokes we can't explain, and for making my days so much brighter. i hope today surrounds you with the exact same sweet joy you spread.",
     pinterestFinalTitle: "happy birthday ♡",
-    pinterestFinalLetter: "happy birthday once again. i hope this new chapter brings you so many cozy afternoons, sweet achievements, and gentle smiles. i'll always be here to support you, cheer for you, and celebrate all your happiest moments. have the most magical day ever!"
+    pinterestFinalLetter: "happy birthday once again. i hope this new chapter brings you so many cozy afternoons, sweet achievements, and gentle smiles. i'll always be here to support you, cheer for you, and celebrate all your happiest moments. have the most magical day ever!",
+    passcode: "1234",
+
+    // Dear You default state
+    isDearYou: false,
+    dearYouFavoritePhoto: "",
+    dearYouFavoriteQuote: "Completely and perfectly, incandescently happy.",
+    dearYouMemoryCaption: "i love you",
+    dearYouMem0: "",
+    dearYouMem1: "",
+    dearYouMem2: "",
+    dearYouMem3: "",
+    dearYouAge: 7,
+    dearYouHeadline: "Happy Birthday, My Love",
+    dearYouHeadlinePhoto: "",
+    dearYouNoteText: "Happy birthday to my favorite person. You are the most caring, loving, and supportive soul I know — grateful for every ordinary Tuesday and every big adventure with you.",
+    dearYouNotePhoto: "",
+    dearYouFinalMessage: "Here's to another trip around the sun, with me right beside you.",
+    dearYouSenderName: "Sam",
+    dearYouAccent: "#B33A2E"
   });
 
   // 2. AI Wizard Suggestion Parameters
@@ -88,6 +107,54 @@ export default function BirthdayCardCreator() {
             setFormState((prev) => ({
               ...prev,
               avatarUrl: compressedDataUrl,
+            }));
+          } catch (err) {
+            console.error("Image compression error:", err);
+            setImageUploadError("Failed to convert image. Please try a different photo.");
+          }
+        }
+      };
+      img.onerror = () => {
+        setImageUploadError("Failed to load selected image.");
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Reusable lightweight cropper/compressor for individual Dear You section photos
+  const handleDearYouPhotoCompress = (e: React.ChangeEvent<HTMLInputElement>, fieldName: keyof BirthdayCardState) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setImageUploadError("Please upload a valid image file (PNG/JPG).");
+      return;
+    }
+
+    setImageUploadError(null);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        
+        const size = 240;
+        canvas.width = size;
+        canvas.height = size;
+        
+        if (ctx) {
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+          
+          try {
+            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.65);
+            setFormState((prev) => ({
+              ...prev,
+              [fieldName]: compressedDataUrl,
             }));
           } catch (err) {
             console.error("Image compression error:", err);
@@ -447,34 +514,48 @@ export default function BirthdayCardCreator() {
               <label className="block text-xs font-black text-rose-500 dark:text-rose-450 uppercase tracking-widest text-center">
                 🌸 Select Card Layout Vibe 🌸
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => setFormState({ ...formState, isPinterestCard: true, theme: "pastel", emotion: "cute" })}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold font-sans tracking-wide border cursor-pointer text-center flex flex-col items-center justify-center gap-1 transition-all ${
-                    formState.isPinterestCard
+                  onClick={() => setFormState({ ...formState, isPinterestCard: true, isDearYou: false, theme: "pastel", emotion: "cute" })}
+                  className={`py-2 px-1 rounded-xl text-[11px] font-bold font-sans tracking-wide border cursor-pointer text-center flex flex-col items-center justify-center gap-1 transition-all ${
+                    formState.isPinterestCard && !formState.isDearYou
                       ? "bg-rose-400 border-rose-300 text-white shadow-sm scale-[1.01]"
                       : "bg-white dark:bg-slate-900 border-slate-200 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
                   }`}
                 >
-                  <span className="text-sm font-mono">🌸 PASTEL PINTEREST</span>
-                  <span className="text-[9px] font-medium opacity-90">Cute 5-Step Storybook</span>
+                  <span className="text-[11px] font-mono">🌸 PASTEL PINTEREST</span>
+                  <span className="text-[8px] font-medium opacity-90">Cute 5-Step Storybook</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormState({ ...formState, isPinterestCard: false })}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold font-sans tracking-wide border cursor-pointer text-center flex flex-col items-center justify-center gap-1 transition-all ${
-                    !formState.isPinterestCard
+                  onClick={() => setFormState({ ...formState, isPinterestCard: false, isDearYou: false })}
+                  className={`py-2 px-1 rounded-xl text-[11px] font-bold font-sans tracking-wide border cursor-pointer text-center flex flex-col items-center justify-center gap-1 transition-all ${
+                    !formState.isPinterestCard && !formState.isDearYou
                       ? "bg-indigo-600 border-indigo-500 text-white shadow-sm scale-[1.01]"
                       : "bg-white dark:bg-slate-900 border-slate-200 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
                   }`}
                 >
-                  <span className="text-sm font-mono">🎈 CLASSIC SURPRISE</span>
-                  <span className="text-[9px] font-medium opacity-90">Candle Cake & Giftbox</span>
+                  <span className="text-[11px] font-mono">🎈 CLASSIC SURPRISE</span>
+                  <span className="text-[8px] font-medium opacity-90">Candle Cake & Giftbox</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormState({ ...formState, isPinterestCard: false, isDearYou: true })}
+                  className={`py-2 px-1 rounded-xl text-[11px] font-bold font-sans tracking-wide border cursor-pointer text-center flex flex-col items-center justify-center gap-1 transition-all ${
+                    formState.isDearYou
+                      ? "bg-amber-600 border-amber-500 text-white shadow-sm scale-[1.01]"
+                      : "bg-white dark:bg-slate-900 border-slate-200 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="text-[11px] font-mono">💌 DEAR YOU</span>
+                  <span className="text-[8px] font-medium opacity-90">Cozy 8-Step Scrapbook</span>
                 </button>
               </div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 text-center font-light leading-relaxed">
-                {formState.isPinterestCard
+                {formState.isDearYou
+                  ? "An elegant, retro scrapbook card with passcode lock, animated envelopes, a custom candle-blowing cake, 4 memory photos, a hand-written letter, and beautiful color accents!"
+                  : formState.isPinterestCard
                   ? "Bake cupcakes, pop customizable balloons, play sweet chiptunes, and flip through a gorgeous lavender polaroid album with personalized song titles!"
                   : "A gamified quest with micro-interactions: blow out the candles, unwrap a sealed box, and discover a custom gift clue & poem."}
               </p>
@@ -536,6 +617,27 @@ export default function BirthdayCardCreator() {
                   className="w-full border border-slate-305 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-sm focus:outline-indigo-500"
                 />
               </div>
+            </div>
+
+            {/* SECURITY GATE SETTING */}
+            <div className="bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 p-3.5 rounded-2xl">
+              <label className="block text-xs font-bold text-rose-600 dark:text-rose-400 mb-1.5 uppercase tracking-wide font-mono flex items-center gap-1.5">
+                🔐 4-Digit Security Passcode
+              </label>
+              <input
+                type="text"
+                maxLength={4}
+                placeholder="e.g. 1234 (Default: 1234)"
+                value={formState.passcode || ""}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  setFormState({ ...formState, passcode: val });
+                }}
+                className="w-full md:w-64 border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-sm font-mono tracking-widest focus:ring-2 focus:ring-rose-500 outline-none"
+              />
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                If provided, the recipient must enter this 4-digit code on an aesthetic keypad gate to unlock their digital scrapbook greeting card!
+              </p>
             </div>
 
             {/* AVATAR CHOOSER */}
@@ -720,12 +822,244 @@ export default function BirthdayCardCreator() {
             <div className="flex items-center space-x-2 text-slate-800 dark:text-white font-extrabold pb-3 border-b border-dashed border-slate-100 dark:border-slate-800">
               <span className="text-sm bg-rose-50 text-rose-500 py-1 px-2 rounded">03</span>
               <h2 className="text-sm uppercase tracking-wider">
-                {formState.isPinterestCard ? "Review Pinterest 5-Page Content" : "Review Card Letter Content"}
+                {formState.isDearYou ? "Review 'Dear You' 8-Step Content" : formState.isPinterestCard ? "Review Pinterest 5-Page Content" : "Review Card Letter Content"}
               </h2>
             </div>
 
             <div className="space-y-4">
-              {formState.isPinterestCard ? (
+              {formState.isDearYou ? (
+                /* DEAR YOU INTERACTIVE SCRAPBOOK FIELDS */
+                <div className="space-y-4">
+                  <div className="p-4 bg-amber-50/40 dark:bg-amber-955/10 rounded-2xl border border-amber-100 dark:border-amber-900/30 space-y-4">
+                    <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-widest font-sans block">💌 Dear You Customizer (8-Step Scrapbook)</span>
+                    
+                    {/* Step 1: Passcode */}
+                    <div className="space-y-1.5 pt-2 border-t border-dashed border-amber-100 dark:border-amber-900/20">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">🔐 Passcode Lock (4 Digits)</label>
+                      <input
+                        type="text"
+                        maxLength={4}
+                        placeholder="e.g. 1206"
+                        value={formState.passcode || ""}
+                        onChange={(e) => setFormState({ ...formState, passcode: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                        className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs font-mono tracking-widest text-slate-800 dark:text-white"
+                      />
+                      <p className="text-[9px] text-slate-500">A special date or number they'll guess with a smile.</p>
+                    </div>
+
+                    {/* Step 2: Favorite Person */}
+                    <div className="space-y-2 pt-3 border-t border-dashed border-amber-100 dark:border-amber-900/20">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">🥰 Favorite Person Page</label>
+                      
+                      <div className="space-y-1">
+                        <span className="block text-[10px] text-slate-500 font-medium">Short Line About Them</span>
+                        <input
+                          type="text"
+                          value={formState.dearYouFavoriteQuote || ""}
+                          onChange={(e) => setFormState({ ...formState, dearYouFavoriteQuote: e.target.value })}
+                          className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="block text-[10px] text-slate-500 font-medium">Favorite Person Photo</span>
+                        <div className="flex items-center gap-3">
+                          <label className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 border border-dashed border-amber-300 hover:border-amber-500 bg-white hover:bg-amber-50/10 rounded-xl cursor-pointer transition-colors text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Upload Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleDearYouPhotoCompress(e, "dearYouFavoritePhoto")}
+                              className="hidden"
+                            />
+                          </label>
+                          {formState.dearYouFavoritePhoto && (
+                            <img src={formState.dearYouFavoritePhoto} className="w-10 h-10 object-cover rounded-lg border border-amber-200" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3: Memories */}
+                    <div className="space-y-3 pt-3 border-t border-dashed border-amber-100 dark:border-amber-900/20">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">📸 Our Memories Page</label>
+                      
+                      <div className="space-y-1">
+                        <span className="block text-[10px] text-slate-500 font-medium">Caption (e.g. "i love you")</span>
+                        <input
+                          type="text"
+                          value={formState.dearYouMemoryCaption || ""}
+                          onChange={(e) => setFormState({ ...formState, dearYouMemoryCaption: e.target.value })}
+                          className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <span className="block text-[10px] text-slate-500 font-medium">Four Photos (Polaroid Grid)</span>
+                        <div className="grid grid-cols-4 gap-2">
+                          {(["dearYouMem0", "dearYouMem1", "dearYouMem2", "dearYouMem3"] as const).map((memKey, idx) => (
+                            <div key={memKey} className="relative aspect-square bg-white dark:bg-slate-950 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg overflow-hidden flex flex-col items-center justify-center">
+                              {formState[memKey] ? (
+                                <>
+                                  <img src={formState[memKey]} className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={() => setFormState({ ...formState, [memKey]: "" })}
+                                    className="absolute top-0.5 right-0.5 bg-rose-500 text-white rounded-full p-0.5 text-[8px] leading-none"
+                                  >
+                                    ✕
+                                  </button>
+                                </>
+                              ) : (
+                                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-amber-50/10">
+                                  <span className="text-slate-400 text-[10px] font-bold">#{idx + 1}</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleDearYouPhotoCompress(e, memKey)}
+                                    className="hidden"
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 4: Make a Wish */}
+                    <div className="space-y-1.5 pt-3 border-t border-dashed border-amber-100 dark:border-amber-900/20">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">🎂 Make A Wish Page</label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-500">Number of Candles:</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={12}
+                          value={formState.dearYouAge || 7}
+                          onChange={(e) => setFormState({ ...formState, dearYouAge: Math.max(1, Math.min(12, parseInt(e.target.value) || 1)) })}
+                          className="w-20 border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-1 rounded-lg text-xs text-center text-slate-800 dark:text-white"
+                        />
+                      </div>
+                      <p className="text-[9px] text-slate-500">They will tap the cake in interactive view to blow out these candles!</p>
+                    </div>
+
+                    {/* Step 5: Big Reveal */}
+                    <div className="space-y-2 pt-3 border-t border-dashed border-amber-100 dark:border-amber-900/20">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">✨ The Big Reveal Page</label>
+                      
+                      <div className="space-y-1">
+                        <span className="block text-[10px] text-slate-500 font-medium">Headline Title</span>
+                        <input
+                          type="text"
+                          value={formState.dearYouHeadline || ""}
+                          onChange={(e) => setFormState({ ...formState, dearYouHeadline: e.target.value })}
+                          className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="block text-[10px] text-slate-500 font-medium">Reveal Banner Photo</span>
+                        <div className="flex items-center gap-3">
+                          <label className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 border border-dashed border-amber-300 hover:border-amber-500 bg-white hover:bg-amber-50/10 rounded-xl cursor-pointer transition-colors text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Upload Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleDearYouPhotoCompress(e, "dearYouHeadlinePhoto")}
+                              className="hidden"
+                            />
+                          </label>
+                          {formState.dearYouHeadlinePhoto && (
+                            <img src={formState.dearYouHeadlinePhoto} className="w-10 h-10 object-cover rounded-lg border border-amber-200" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 6: Handwritten Note */}
+                    <div className="space-y-2 pt-3 border-t border-dashed border-amber-100 dark:border-amber-900/20">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">✍️ A Handwritten Note Page</label>
+                      
+                      <div className="space-y-1">
+                        <span className="block text-[10px] text-slate-500 font-medium">Your Note Message</span>
+                        <textarea
+                          rows={3}
+                          value={formState.dearYouNoteText || ""}
+                          onChange={(e) => setFormState({ ...formState, dearYouNoteText: e.target.value })}
+                          className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white leading-relaxed"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="block text-[10px] text-slate-500 font-medium">Note Accent Photo</span>
+                        <div className="flex items-center gap-3">
+                          <label className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 border border-dashed border-amber-300 hover:border-amber-500 bg-white hover:bg-amber-50/10 rounded-xl cursor-pointer transition-colors text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Upload Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleDearYouPhotoCompress(e, "dearYouNotePhoto")}
+                              className="hidden"
+                            />
+                          </label>
+                          {formState.dearYouNotePhoto && (
+                            <img src={formState.dearYouNotePhoto} className="w-10 h-10 object-cover rounded-lg border border-amber-200" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 7: Sign Off */}
+                    <div className="space-y-2.5 pt-3 border-t border-dashed border-amber-100 dark:border-amber-900/20">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">🖋️ Sign Off & Color</label>
+                      
+                      <div className="space-y-1">
+                        <span className="block text-[10px] text-slate-500 font-medium">Closing Line</span>
+                        <input
+                          type="text"
+                          value={formState.dearYouFinalMessage || ""}
+                          onChange={(e) => setFormState({ ...formState, dearYouFinalMessage: e.target.value })}
+                          className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="block text-[10px] text-slate-500 font-medium">From Name</span>
+                          <input
+                            type="text"
+                            value={formState.dearYouSenderName || ""}
+                            onChange={(e) => setFormState({ ...formState, dearYouSenderName: e.target.value })}
+                            className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <span className="block text-[10px] text-slate-500 font-medium">Card Color Theme</span>
+                          <div className="flex items-center gap-1 mt-1.5">
+                            {['#B33A2E', '#7A4FA3', '#2E7D6B', '#B3762E', '#4A5FB3', '#B33A7A'].map((c) => (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => setFormState({ ...formState, dearYouAccent: c })}
+                                style={{ backgroundColor: c }}
+                                className={`w-5 h-5 rounded-full border border-white cursor-pointer transition-transform ${
+                                  formState.dearYouAccent === c ? "scale-125 ring-2 ring-amber-400" : ""
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              ) : formState.isPinterestCard ? (
                 /* PINTEREST INTERACTIVE MULTI-PAGES FIELDS */
                 <div className="space-y-4">
                   {/* Primary Inputs first */}

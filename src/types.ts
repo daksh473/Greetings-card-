@@ -44,6 +44,25 @@ export interface BirthdayCardState {
   uploadedPhotos?: string[]; // compressed Base64 images array
   uploadedMusic?: string; // compressed Base64 MP3 URL or reference
   uploadedMusicName?: string; // custom title of the uploaded file
+  passcode?: string; // 4-digit passcode gate for recipient
+  
+  // Custom Dear You card fields
+  isDearYou?: boolean;
+  dearYouFavoritePhoto?: string;
+  dearYouFavoriteQuote?: string;
+  dearYouMemoryCaption?: string;
+  dearYouMem0?: string;
+  dearYouMem1?: string;
+  dearYouMem2?: string;
+  dearYouMem3?: string;
+  dearYouAge?: number;
+  dearYouHeadline?: string;
+  dearYouHeadlinePhoto?: string;
+  dearYouNoteText?: string;
+  dearYouNotePhoto?: string;
+  dearYouFinalMessage?: string;
+  dearYouSenderName?: string;
+  dearYouAccent?: string;
 }
 
 export interface SuggestionParams {
