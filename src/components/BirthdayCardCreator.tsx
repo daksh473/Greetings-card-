@@ -420,7 +420,7 @@ export default function BirthdayCardCreator() {
     setGeneratedLink(null);
 
     try {
-      // 1. Primary path: Attempt high-performance Direct client-side Firestore storage (Fully compatible with Vercel)
+      // 1. Primary path: Attempt high-performance Direct client-side Firestore storage (Fully compatible with Vercel/Netlify)
       const { doc, setDoc, getDoc } = await import("firebase/firestore");
       const { db } = await import("../lib/firebase");
 
@@ -442,8 +442,11 @@ export default function BirthdayCardCreator() {
         throw new Error("Failed to generate a unique short code. Please try again.");
       }
 
+      // Sanitize the formState to remove any 'undefined' values (which Firestore rejects)
+      const sanitizedState = JSON.parse(JSON.stringify(formState));
+
       const finalDocRef = doc(db, "cards", shortId);
-      await setDoc(finalDocRef, formState);
+      await setDoc(finalDocRef, sanitizedState);
 
       const absoluteUrl = `${window.location.origin}/?c=${shortId}`;
       setGeneratedLink(absoluteUrl);
@@ -476,7 +479,20 @@ export default function BirthdayCardCreator() {
       } catch (err: any) {
         console.warn("Backend shortener failed, falling back to full offline URL parameters", err);
         // 3. Last resort fallback: Standard offline Base64 encoding parameters (safe & requires no network)
-        const encodedStr = encodeCardState(formState);
+        const urlSafeState = JSON.parse(JSON.stringify(formState));
+        // Remove massive photo attachments to ensure URL fits within Netlify's 8KB length limit
+        if (urlSafeState.uploadedPhotos) delete urlSafeState.uploadedPhotos;
+        if (urlSafeState.dearYouFavoritePhoto) delete urlSafeState.dearYouFavoritePhoto;
+        if (urlSafeState.dearYouHeadlinePhoto) delete urlSafeState.dearYouHeadlinePhoto;
+        if (urlSafeState.dearYouNotePhoto) delete urlSafeState.dearYouNotePhoto;
+        if (urlSafeState.pinterestOldPaperPhoto) delete urlSafeState.pinterestOldPaperPhoto;
+        if (urlSafeState.passcodeBgUrl) delete urlSafeState.passcodeBgUrl;
+        if (urlSafeState.customBgUrl) delete urlSafeState.customBgUrl;
+        if (urlSafeState.avatarUrl && urlSafeState.avatarUrl.startsWith("data:")) {
+          urlSafeState.avatarUrl = "kitty"; // Fall back to default adorable kitty avatar for offline link
+        }
+
+        const encodedStr = encodeCardState(urlSafeState);
         if (encodedStr) {
           const absoluteUrl = `${window.location.origin}/?card=${encodedStr}`;
           setGeneratedLink(absoluteUrl);

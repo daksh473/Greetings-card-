@@ -10,91 +10,107 @@ class AudioSynthesizer {
   private playTimeoutId: any = null;
 
   init() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    if (this.ctx.state === "suspended") {
-      this.ctx.resume();
+    try {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      if (this.ctx && this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch (err) {
+      console.warn("AudioContext failed to initialize:", err);
     }
   }
 
   // Plays a short sparkle sound effect when blowing candles or opening gifts
   playSparkle() {
-    this.init();
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-    notes.forEach((freq, idx) => {
-      const time = now + idx * 0.08;
-      const osc = this.ctx!.createOscillator();
-      const gain = this.ctx!.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, time);
-      gain.gain.setValueAtTime(0.12, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
-      osc.connect(gain);
-      gain.connect(this.ctx!.destination);
-      osc.start(time);
-      osc.stop(time + 0.3);
-    });
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const time = now + idx * 0.08;
+        const osc = this.ctx!.createOscillator();
+        const gain = this.ctx!.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, time);
+        gain.gain.setValueAtTime(0.12, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx!.destination);
+        osc.start(time);
+        osc.stop(time + 0.3);
+      });
+    } catch (err) {
+      console.warn("playSparkle failed:", err);
+    }
   }
 
   // Plays a short balloon pop noise burst
   playPop() {
-    this.init();
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    
-    // Short pop frequency snap
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
-    
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-    
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.08);
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      
+      // Short pop frequency snap
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
+      
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
 
-    // High snap click
-    const oscClick = this.ctx.createOscillator();
-    const gainClick = this.ctx.createGain();
-    oscClick.type = "sine";
-    oscClick.frequency.setValueAtTime(800, now);
-    gainClick.gain.setValueAtTime(0.15, now);
-    gainClick.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
-    oscClick.connect(gainClick);
-    gainClick.connect(this.ctx.destination);
-    oscClick.start(now);
-    oscClick.stop(now + 0.02);
+      // High snap click
+      const oscClick = this.ctx.createOscillator();
+      const gainClick = this.ctx.createGain();
+      oscClick.type = "sine";
+      oscClick.frequency.setValueAtTime(800, now);
+      gainClick.gain.setValueAtTime(0.15, now);
+      gainClick.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+      oscClick.connect(gainClick);
+      gainClick.connect(this.ctx.destination);
+      oscClick.start(now);
+      oscClick.stop(now + 0.02);
+    } catch (err) {
+      console.warn("playPop failed:", err);
+    }
   }
 
   // Play a beautiful synthesized clap/cheer noise burst for celebration!
   playCheer() {
-    this.init();
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    
-    // Cheering is modeled using a combination of band-pass filtered white noise 
-    // and rapid high-frequency triangle pitches representing clapping hands.
-    for (let i = 0; i < 8; i++) {
-      const delay = Math.random() * 0.4;
-      const clapTime = now + delay;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(100 + Math.random() * 800, clapTime);
-      gain.gain.setValueAtTime(0.12, clapTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, clapTime + 0.08);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(clapTime);
-      osc.stop(clapTime + 0.08);
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      
+      // Cheering is modeled using a combination of band-pass filtered white noise 
+      // and rapid high-frequency triangle pitches representing clapping hands.
+      for (let i = 0; i < 8; i++) {
+        const delay = Math.random() * 0.4;
+        const clapTime = now + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(100 + Math.random() * 800, clapTime);
+        gain.gain.setValueAtTime(0.12, clapTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, clapTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(clapTime);
+        osc.stop(clapTime + 0.08);
+      }
+    } catch (err) {
+      console.warn("playCheer failed:", err);
     }
   }
 
