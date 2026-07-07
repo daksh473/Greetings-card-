@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { BirthdayCardState } from "../types";
 import { synth } from "../utils/audio";
 import { AVATAR_OPTIONS } from "../utils/sharing";
-import { Gift, Volume2, VolumeX, Sparkles, RefreshCw, Flame, Check, HelpCircle, Heart, Star, ArrowRight, Lock, Unlock } from "lucide-react";
+import { Gift, Volume2, VolumeX, Sparkles, RefreshCw, Flame, Check, HelpCircle, Heart, Star, ArrowRight, Lock, Unlock, Image as ImageIcon, Upload, X } from "lucide-react";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -240,6 +240,15 @@ const bookFlipVariants = {
   }),
 };
 
+const PRESET_WALLPAPERS = [
+  { name: "Starry Night", url: "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=1200" },
+  { name: "Midnight Aurora", url: "https://images.unsplash.com/photo-1579033461380-adb47c3eb938?auto=format&fit=crop&q=80&w=1200" },
+  { name: "Cyberpunk Neon", url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&q=80&w=1200" },
+  { name: "Mystic Purple", url: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=1200" },
+  { name: "Velvet Rose Dusk", url: "https://images.unsplash.com/photo-1516339901601-2e1d62dc0c45?auto=format&fit=crop&q=80&w=1200" },
+  { name: "Minimal Obsidian", url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200" }
+];
+
 export default function BirthdayCardViewer({ state, isInteractivePreview = false, onResetPreview }: BirthdayCardViewerProps) {
   const [envelopeOpened, setEnvelopeOpened] = useState(false);
   const [candlesBlown, setCandlesBlown] = useState(false);
@@ -257,6 +266,309 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
   const [passcodeVerified, setPasscodeVerified] = useState(false);
   const [enteredPasscode, setEnteredPasscode] = useState("");
   const [passcodeError, setPasscodeError] = useState(false);
+
+  // Dynamic wallpaper states
+  const [passcodeBg, setPasscodeBg] = useState(state.passcodeBgUrl || "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=1200");
+  const [showWallpaperMenu, setShowWallpaperMenu] = useState(false);
+
+  useEffect(() => {
+    if (state.passcodeBgUrl) {
+      setPasscodeBg(state.passcodeBgUrl);
+    }
+  }, [state.passcodeBgUrl]);
+
+  const updatePasscodeBgInDb = async (newUrl: string) => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const shortId = params.get("c") || params.get("id");
+      if (shortId) {
+        const { doc, setDoc } = await import("firebase/firestore");
+        const { db } = await import("../lib/firebase");
+        const docRef = doc(db, "cards", shortId);
+        await setDoc(docRef, { passcodeBgUrl: newUrl }, { merge: true });
+        console.log("DB update success");
+      }
+    } catch (err) {
+      console.warn("DB update failed:", err);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string;
+      if (base64) {
+        setPasscodeBg(base64);
+        await updatePasscodeBgInDb(base64);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleKeypadPress = (key: string | number) => {
+    if (passcodeError) return;
+    synth.playPop();
+
+    if (key === "delete") {
+      setEnteredPasscode(p => p.slice(0, -1));
+    } else if (key === "cancel") {
+      setEnvelopeTouched(false);
+      setEnteredPasscode("");
+      setPasscodeError(false);
+    } else {
+      const numStr = String(key);
+      if (enteredPasscode.length < 4) {
+        const nextVal = enteredPasscode + numStr;
+        setEnteredPasscode(nextVal);
+        
+        if (nextVal.length === 4) {
+          if (nextVal === state.passcode) {
+            synth.playSparkle();
+            confetti({ particleCount: 50, spread: 60 });
+            setPasscodeVerified(true);
+            triggerOpenCard();
+          } else {
+            synth.playPop();
+            setPasscodeError(true);
+            setTimeout(() => {
+              setEnteredPasscode("");
+              setPasscodeError(false);
+            }, 1200);
+          }
+        }
+      }
+    }
+  };
+
+  // Keyboard support
+  useEffect(() => {
+    if (envelopeOpened || !envelopeTouched || passcodeVerified) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= "0" && e.key <= "9") {
+        handleKeypadPress(parseInt(e.key));
+      } else if (e.key === "Backspace") {
+        handleKeypadPress("delete");
+      } else if (e.key === "Escape") {
+        handleKeypadPress("cancel");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [envelopeOpened, envelopeTouched, passcodeVerified, enteredPasscode, passcodeError]);
+
+  const renderLockScreen = () => {
+    return (
+      <motion.div
+        key="lock-screen-immersive"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.98 }}
+        style={{ 
+          backgroundImage: `url(${passcodeBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center"
+        }}
+        className="absolute inset-0 w-full h-full flex flex-col justify-between p-6 text-white font-sans overflow-hidden select-none z-30"
+      >
+        {/* Dark blur overlay for wallpaper readability */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-0 rounded-[28px]" />
+
+        {/* Change Wallpaper Widget Button */}
+        <div className="absolute top-4 right-4 z-40">
+          <button
+            type="button"
+            onClick={() => setShowWallpaperMenu(!showWallpaperMenu)}
+            className="bg-black/50 hover:bg-black/80 border border-white/25 text-white p-2 rounded-full transition-all cursor-pointer flex items-center justify-center shadow-lg active:scale-90"
+            title="Change Wallpaper"
+          >
+            <ImageIcon className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Custom Glassmorphic Wallpaper Control Menu */}
+        {showWallpaperMenu && (
+          <div className="absolute inset-x-4 top-16 bg-slate-950/95 backdrop-blur-lg border border-white/10 rounded-2xl p-4 z-50 shadow-2xl animate-fade-in text-left text-white">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
+              <span className="text-xs font-bold text-white/95 tracking-wide flex items-center gap-1.5">
+                🌌 Lock Screen Wallpaper
+              </span>
+              <button 
+                onClick={() => setShowWallpaperMenu(false)}
+                className="text-white/40 hover:text-white/95 bg-transparent border-0 cursor-pointer p-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Presets */}
+              <div>
+                <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider mb-2">Preset Wallpapers</span>
+                <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-white/10">
+                  {PRESET_WALLPAPERS.map((wp) => (
+                    <button
+                      key={wp.name}
+                      type="button"
+                      onClick={async () => {
+                        setPasscodeBg(wp.url);
+                        await updatePasscodeBgInDb(wp.url);
+                      }}
+                      className={`w-11 h-11 rounded-xl relative overflow-hidden flex-shrink-0 border-2 transition-all cursor-pointer active:scale-95 ${
+                        passcodeBg === wp.url ? "border-pink-500 scale-105 shadow-md" : "border-transparent opacity-75 hover:opacity-100"
+                      }`}
+                      title={wp.name}
+                    >
+                      <img src={wp.url} alt={wp.name} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom Image Link */}
+              <div className="space-y-1">
+                <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider">Custom Image URL</span>
+                <input
+                  type="text"
+                  placeholder="Paste direct image link..."
+                  value={passcodeBg.startsWith("data:") ? "" : passcodeBg}
+                  onChange={async (e) => {
+                    const val = e.target.value.trim();
+                    if (val) {
+                      setPasscodeBg(val);
+                      await updatePasscodeBgInDb(val);
+                    }
+                  }}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:border-pink-500 font-mono"
+                />
+              </div>
+
+              {/* Local File Upload */}
+              <div className="space-y-1">
+                <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider">Or upload from your device</span>
+                <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 hover:border-white/40 rounded-xl py-2.5 cursor-pointer transition-colors bg-white/5 hover:bg-white/10 text-xs">
+                  <Upload className="w-3.5 h-3.5 text-white/60" />
+                  <span className="text-white/80 font-medium">Choose image file</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Content Centering Area */}
+        <div className="relative z-10 flex flex-col items-center h-full justify-between py-6">
+          {/* Lock Screen Header */}
+          <div className="text-center mt-6 flex flex-col items-center">
+            {/* Elegant Small Lock Icon */}
+            <div className="mb-2 text-white/60 animate-pulse">
+              <Lock className="w-4 h-4" />
+            </div>
+            
+            <p className="text-md font-light tracking-widest text-white/95 font-sans">
+              Enter password
+            </p>
+            
+            {/* Dynamic Dot Indicators */}
+            <div className="flex justify-center gap-4 mt-6">
+              {Array.from({ length: 4 }).map((_, idx) => {
+                const isFilled = enteredPasscode.length > idx;
+                return (
+                  <div
+                    key={idx}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      passcodeError
+                        ? "bg-red-500 animate-shake border border-red-400"
+                        : isFilled
+                        ? "bg-white scale-110 shadow-[0_0_10px_rgba(255,255,255,0.9)]"
+                        : "border border-white/40 bg-transparent"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Elegant Circular Keypad Grid */}
+          <div className="grid grid-cols-3 gap-x-6 gap-y-4 max-w-[240px] mx-auto my-auto relative z-10">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => {
+              const letters = 
+                num === 2 ? "ABC" :
+                num === 3 ? "DEF" :
+                num === 4 ? "GHI" :
+                num === 5 ? "JKL" :
+                num === 6 ? "MNO" :
+                num === 7 ? "PQRS" :
+                num === 8 ? "TUV" :
+                num === 9 ? "WXYZ" : "";
+              return (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handleKeypadPress(num)}
+                  className="w-16 h-16 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all duration-100 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus:ring-1 focus:ring-white/20"
+                >
+                  <span className="text-2xl font-light text-white leading-none">{num}</span>
+                  {letters && (
+                    <span className="text-[8px] font-bold text-white/40 tracking-widest leading-none mt-0.5 uppercase">
+                      {letters}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            
+            {/* Bottom Row */}
+            <button
+              type="button"
+              onClick={() => handleKeypadPress("cancel")}
+              className="w-16 h-16 rounded-full flex items-center justify-center text-xs text-white/70 hover:text-white cursor-pointer select-none active:scale-95 transition-all outline-none"
+            >
+              Cancel
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => handleKeypadPress(0)}
+              className="w-16 h-16 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all duration-100 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus:ring-1 focus:ring-white/20"
+            >
+              <span className="text-2xl font-light text-white leading-none">0</span>
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => handleKeypadPress("delete")}
+              className="w-16 h-16 rounded-full flex items-center justify-center text-xs text-white/70 hover:text-white cursor-pointer select-none active:scale-95 transition-all outline-none"
+            >
+              Delete
+            </button>
+          </div>
+
+          {/* Hint / Footer area */}
+          <div className="text-center mb-2 px-4">
+            {passcodeError ? (
+              <p className="text-xs font-bold text-red-400 animate-pulse">
+                Incorrect Passcode! Please try again.
+              </p>
+            ) : (
+              <p className="text-xs text-white/50 tracking-wide leading-relaxed">
+                Hint: Relationship is <span className="font-bold underline text-white/85 decoration-dotted">{state.relationship || "friend"}</span>
+              </p>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
 
   // States and refs for dynamic multimedia Kawaii card features
   const [albumIndex, setAlbumIndex] = useState(0);
@@ -1178,101 +1490,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   </motion.div>
                 )}
 
-              {!envelopeOpened && envelopeTouched && (
-                /* Step 2: Passcode Entry inside Scrapbook */
-                <motion.div
-                    key="scrapbook-passcode-entry"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    className="space-y-6 py-6 text-center flex flex-col items-center"
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="w-12 h-12 rounded-full bg-amber-500/10 border-2 border-amber-500/35 flex items-center justify-center text-amber-600 mb-3">
-                        <Lock className="w-5 h-5" />
-                      </div>
-                      <h2 className="text-2xl font-black text-[#4c0519] dark:text-amber-100 font-handwriting tracking-tight">Unlock Scrapbook</h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
-                        Please enter the 4-digit passcode to unlock your birthday card.
-                      </p>
-                    </div>
-
-                    <div className="flex justify-center gap-3 my-4">
-                      {Array.from({ length: 4 }).map((_, idx) => {
-                        const char = enteredPasscode[idx] || "";
-                        return (
-                          <div
-                            key={idx}
-                            className={`w-12 h-14 rounded-2xl border-2 flex items-center justify-center text-xl font-bold font-mono transition-all duration-300 ${
-                              passcodeError
-                                ? "border-red-500 bg-red-50 dark:bg-red-950/20 text-red-500 animate-shake"
-                                : char
-                                ? "border-amber-500 bg-amber-50 dark:bg-amber-950/50 text-amber-600"
-                                : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 text-slate-400"
-                            }`}
-                          >
-                            {char ? "•" : ""}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {passcodeError ? (
-                      <p className="text-xs font-bold text-red-500 animate-pulse">
-                        Wrong passcode! Hint: check with the sender or try again.
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-slate-450 italic">
-                        Hint: Sender relationship is <span className="font-bold underline text-amber-700 dark:text-amber-400">{state.relationship || "friend"}</span>
-                      </p>
-                    )}
-
-                    {/* Hidden text input for typing on desktop/mobile */}
-                    <input
-                      type="text"
-                      pattern="[0-9]*"
-                      inputMode="numeric"
-                      maxLength={4}
-                      value={enteredPasscode}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                        setEnteredPasscode(val);
-                        setPasscodeError(false);
-                        
-                        if (val.length === 4) {
-                          if (val === state.passcode) {
-                            synth.playSparkle();
-                            confetti({ particleCount: 50, spread: 60 });
-                            setPasscodeVerified(true);
-                            triggerOpenCard();
-                          } else {
-                            synth.playPop();
-                            setPasscodeError(true);
-                            setTimeout(() => {
-                              setEnteredPasscode("");
-                              setPasscodeError(false);
-                            }, 1200);
-                          }
-                        }
-                      }}
-                      className="w-full max-w-xs mx-auto border border-amber-300/60 p-2.5 rounded-xl text-center text-xs tracking-widest bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
-                      placeholder="Enter 4-digit code..."
-                      autoFocus
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEnvelopeTouched(false);
-                        setEnteredPasscode("");
-                        setPasscodeError(false);
-                      }}
-                      className="text-xs text-amber-700 dark:text-amber-400 hover:underline font-bold border-0 bg-transparent cursor-pointer block mx-auto mt-2"
-                    >
-                      ← Back to Envelope
-                    </button>
-                  </motion.div>
-                )}
+              {!envelopeOpened && envelopeTouched && renderLockScreen()}
 
               {envelopeOpened && dearYouStep === 1 && (
                     <motion.div
@@ -1402,50 +1620,57 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                       style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                       className="py-1 text-center flex flex-col items-center space-y-4"
                     >
-<h3 className="text-xl font-extrabold text-[#4c0519] dark:text-amber-100">
+                      <h3 className="text-xl font-extrabold text-[#4c0519] dark:text-amber-100">
                         Blow out the candles! 🎂
                       </h3>
                       
-                      {/* Render customized cake */}
-                      <div className="relative scale-90 md:scale-95 my-4" onClick={() => !candlesBlown && triggerCandleBlow()}>
-                        {/* Candles list */}
-                        <div className="flex justify-center space-x-3 mb-[-12px] relative z-10">
-                          {Array.from({ length: Math.min(12, state.dearYouAge || 7) }).map((_, idx) => (
-                            <div key={idx} className="flex flex-col items-center relative">
-                              {/* Flame */}
-                              {!candlesBlown && (
-                                <motion.div
-                                  animate={{
-                                    scale: [1, 1.25, 1],
-                                    y: [0, -2, 0],
-                                  }}
-                                  transition={{
-                                    repeat: Infinity,
-                                    duration: 0.4 + idx * 0.05,
-                                    ease: "easeInOut",
-                                  }}
-                                  className="w-2.5 h-4 bg-gradient-to-t from-red-500 via-yellow-400 to-amber-100 rounded-full blur-[1px] absolute -top-4"
-                                />
-                              )}
-                              {/* Candle Body */}
-                              <div className={`w-2 h-8 bg-gradient-to-b from-amber-300 to-amber-500 border border-slate-900 rounded-sm ${candlesBlown ? "opacity-60" : ""}`} />
+                      {/* Polaroid Frame for Cake */}
+                      <div className="bg-white p-3.5 pb-8 rounded-sm shadow-xl border border-slate-250/50 max-w-xs rotate-[1.5deg] hover:rotate-0 transition-transform duration-300 relative group">
+                        <div className="absolute top-[-8px] left-1/2 transform -translate-x-1/2 w-16 h-4 bg-amber-200/50 border border-amber-300/20 rotate-[1deg] rounded-sm flex items-center justify-center shadow-xs" />
+                        
+                        {/* Cake Container acting as the photo */}
+                        <div className="aspect-square w-60 h-60 bg-amber-50/50 overflow-hidden rounded-xs border border-slate-100 flex flex-col items-center justify-center relative select-none cursor-pointer">
+                          <div className="scale-[0.8] md:scale-[0.85] transform origin-center" onClick={() => !candlesBlown && triggerCandleBlow()}>
+                            {/* Candles list */}
+                            <div className="flex justify-center space-x-3 mb-[-12px] relative z-10">
+                              {Array.from({ length: Math.min(12, state.dearYouAge || 7) }).map((_, idx) => (
+                                <div key={idx} className="flex flex-col items-center relative">
+                                  {/* Flame */}
+                                  {!candlesBlown && (
+                                    <motion.div
+                                      animate={{
+                                        scale: [1, 1.25, 1],
+                                        y: [0, -2, 0],
+                                      }}
+                                      transition={{
+                                        repeat: Infinity,
+                                        duration: 0.4 + idx * 0.05,
+                                        ease: "easeInOut",
+                                      }}
+                                      className="w-2.5 h-4 bg-gradient-to-t from-red-500 via-yellow-400 to-amber-100 rounded-full blur-[1px] absolute -top-4"
+                                    />
+                                  )}
+                                  {/* Candle Body */}
+                                  <div className={`w-2 h-8 bg-gradient-to-b from-amber-300 to-amber-500 border border-slate-900 rounded-sm ${candlesBlown ? "opacity-60" : ""}`} />
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
 
-                        {/* Cake layers */}
-                        <div className="w-44 h-8 bg-pink-350 border border-slate-900 rounded-t-lg relative shadow-md">
-                          {/* Dripping frosting */}
-                          <div className="absolute -bottom-1.5 left-2 w-3 h-3 rounded-full bg-inherit" />
-                          <div className="absolute -bottom-2 left-10 w-4 h-4 rounded-full bg-inherit" />
-                          <div className="absolute -bottom-1.5 left-24 w-3 h-3 rounded-full bg-inherit" />
-                          <div className="absolute -bottom-2 left-32 w-3.5 h-4 rounded-full bg-inherit" />
+                            {/* Cake layers */}
+                            <div className="w-44 h-8 bg-pink-350 border border-slate-900 rounded-t-lg relative shadow-md">
+                              {/* Dripping frosting */}
+                              <div className="absolute -bottom-1.5 left-2 w-3 h-3 rounded-full bg-inherit" />
+                              <div className="absolute -bottom-2 left-10 w-4 h-4 rounded-full bg-inherit" />
+                              <div className="absolute -bottom-1.5 left-24 w-3 h-3 rounded-full bg-inherit" />
+                              <div className="absolute -bottom-2 left-32 w-3.5 h-4 rounded-full bg-inherit" />
+                            </div>
+                            <div className="w-52 h-16 bg-amber-100 border border-slate-900 rounded-b-lg relative z-[-1] overflow-hidden flex items-center justify-center font-bold text-xs uppercase tracking-wider text-slate-800/40 font-handwriting">
+                              Happy Birthday
+                            </div>
+                            {/* Plate */}
+                            <div className="w-56 h-2.5 bg-slate-350 border border-slate-900 rounded-full shadow-md mt-[-2px] mx-auto" />
+                          </div>
                         </div>
-                        <div className="w-52 h-16 bg-amber-100 border border-slate-900 rounded-b-lg relative z-[-1] overflow-hidden flex items-center justify-center font-bold text-xs uppercase tracking-wider text-slate-800/40 font-handwriting">
-                          Happy Birthday
-                        </div>
-                        {/* Plate */}
-                        <div className="w-56 h-2.5 bg-slate-350 border border-slate-900 rounded-full shadow-md mt-[-2px] mx-auto" />
                       </div>
 
                       <div className="mt-2 text-center">
@@ -1462,6 +1687,24 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                             Tap to Blow Out Candles
                           </button>
                         )}
+                      </div>
+
+                      {/* Custom caption box below the image section */}
+                      <div className="w-full max-w-xs bg-rose-50/70 dark:bg-slate-950/40 border-2 border-dashed border-rose-200 dark:border-rose-900/30 rounded-2xl p-4 pr-16 relative text-left shadow-xs mt-3 font-handwriting min-h-[72px] flex items-center">
+                        <p className="text-xs md:text-sm text-slate-800 dark:text-slate-200 italic leading-snug pr-2">
+                          "{state.dearYouCakeWish || "Make a wish and blow out the candles! May all your sweet dreams come true. 🎂✨"}"
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNavigationDirection('forward');
+                            synth.playSparkle();
+                            setDearYouStep(p => p + 1);
+                          }}
+                          className="absolute bottom-2.5 right-2.5 bg-pink-500 hover:bg-pink-600 text-white font-black text-[10px] px-3 py-1.5 rounded-full shadow-md cursor-pointer border-0 flex items-center space-x-1 font-sans transition-transform hover:scale-105 active:scale-95"
+                        >
+                          <span>Celebrate! 🎉</span>
+                        </button>
                       </div>
                     </motion.div>
                   )}
@@ -1675,101 +1918,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   </motion.div>
                 )}
 
-              {!envelopeOpened && envelopeTouched && (
-                /* Step 2: Passcode Entry inside Pinterest */
-                <motion.div
-                    key="pinterest-passcode-entry"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    className="space-y-6 py-6 text-center flex flex-col items-center"
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="w-12 h-12 rounded-full bg-rose-500/10 border-2 border-rose-500/35 flex items-center justify-center text-rose-500 mb-3">
-                        <Lock className="w-5 h-5" />
-                      </div>
-                      <h2 className="text-2xl font-bold font-serif text-rose-600/90 tracking-tight lowercase">Unlock Card</h2>
-                      <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto lowercase font-sans">
-                        Please enter the 4-digit passcode to unlock your birthday card.
-                      </p>
-                    </div>
-
-                    <div className="flex justify-center gap-3 my-4">
-                      {Array.from({ length: 4 }).map((_, idx) => {
-                        const char = enteredPasscode[idx] || "";
-                        return (
-                          <div
-                            key={idx}
-                            className={`w-12 h-14 rounded-2xl border-2 flex items-center justify-center text-xl font-bold font-mono transition-all duration-300 ${
-                              passcodeError
-                                ? "border-red-500 bg-red-50 text-red-500 animate-shake"
-                                : char
-                                ? "border-rose-450 bg-rose-50 text-rose-500"
-                                : "border-slate-200 bg-slate-50 text-slate-400"
-                            }`}
-                          >
-                            {char ? "•" : ""}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {passcodeError ? (
-                      <p className="text-xs font-bold text-red-500 animate-pulse">
-                        Wrong passcode! Hint: check with the sender or try again.
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-slate-450 italic lowercase">
-                        Hint: Sender relationship is <span className="font-bold underline text-rose-700">{state.relationship || "friend"}</span>
-                      </p>
-                    )}
-
-                    {/* Hidden text input for typing on desktop/mobile */}
-                    <input
-                      type="text"
-                      pattern="[0-9]*"
-                      inputMode="numeric"
-                      maxLength={4}
-                      value={enteredPasscode}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                        setEnteredPasscode(val);
-                        setPasscodeError(false);
-                        
-                        if (val.length === 4) {
-                          if (val === state.passcode) {
-                            synth.playSparkle();
-                            confetti({ particleCount: 50, spread: 60 });
-                            setPasscodeVerified(true);
-                            triggerOpenCard();
-                          } else {
-                            synth.playPop();
-                            setPasscodeError(true);
-                            setTimeout(() => {
-                              setEnteredPasscode("");
-                              setPasscodeError(false);
-                            }, 1200);
-                          }
-                        }
-                      }}
-                      className="w-full max-w-xs mx-auto border border-rose-300/60 p-2.5 rounded-xl text-center text-xs tracking-widest bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-rose-500"
-                      placeholder="Enter 4-digit code..."
-                      autoFocus
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEnvelopeTouched(false);
-                        setEnteredPasscode("");
-                        setPasscodeError(false);
-                      }}
-                      className="text-xs text-rose-700 hover:underline font-bold border-0 bg-transparent cursor-pointer block mx-auto mt-2"
-                    >
-                      ← Back to Envelope
-                    </button>
-                  </motion.div>
-                )}
+              {!envelopeOpened && envelopeTouched && renderLockScreen()}
 
               {envelopeOpened && pinterestPage === 1 && (
                   <motion.div
@@ -2130,10 +2279,22 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                         </div>
                       )}
 
-                      <div className="pt-2 border-t border-dashed border-rose-100">
-                        <p className="text-[11px] text-slate-500 font-serif leading-relaxed italic lowercase">
-                          {state.pinterestWishParagraph || "thank you for being you — for the infinite patience, the late-night heart-to-hearts, and the silly inside jokes."}
+                      {/* Custom caption box below the image section */}
+                      <div className="w-full bg-rose-50/70 dark:bg-slate-950/40 border-2 border-dashed border-rose-200 dark:border-rose-900/30 rounded-2xl p-4 pr-16 relative text-left shadow-xs mt-3 font-serif min-h-[72px] flex items-center">
+                        <p className="text-[11px] text-slate-800 dark:text-slate-200 italic leading-relaxed pr-2">
+                          "{state.pinterestWishParagraph || "thank you for being you — for the infinite patience, the late-night heart-to-hearts, and the silly inside jokes."}"
                         </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNavigationDirection('forward');
+                            synth.playSparkle();
+                            setPinterestPage(p => p + 1);
+                          }}
+                          className="absolute bottom-2.5 right-2.5 bg-pink-500 hover:bg-pink-600 text-white font-black text-[10px] px-3 py-1.5 rounded-full shadow-md cursor-pointer border-0 flex items-center space-x-1 font-sans transition-transform hover:scale-105 active:scale-95"
+                        >
+                          <span>Celebrate! 🎉</span>
+                        </button>
                       </div>
                     </div>
                   </motion.div>

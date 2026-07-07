@@ -51,6 +51,7 @@ export default function BirthdayCardCreator() {
     dearYouMem2: "",
     dearYouMem3: "",
     dearYouAge: 7,
+    dearYouCakeWish: "Make a wish and blow out the candles! May all your sweet dreams come true. 🎂✨",
     dearYouHeadline: "Happy Birthday, My Love",
     dearYouHeadlinePhoto: "",
     dearYouNoteText: "Happy birthday to my favorite person. You are the most caring, loving, and supportive soul I know — grateful for every ordinary Tuesday and every big adventure with you.",
@@ -968,6 +969,16 @@ export default function BirthdayCardCreator() {
                           value={formState.dearYouAge || 7}
                           onChange={(e) => setFormState({ ...formState, dearYouAge: Math.max(1, Math.min(12, parseInt(e.target.value) || 1)) })}
                           className="w-20 border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-1 rounded-lg text-xs text-center text-slate-800 dark:text-white"
+                        />
+                      </div>
+                      <div className="space-y-1 mt-2">
+                        <span className="block text-[10px] text-slate-500 font-medium">Cake Wish Caption</span>
+                        <textarea
+                          rows={2}
+                          value={formState.dearYouCakeWish || ""}
+                          onChange={(e) => setFormState({ ...formState, dearYouCakeWish: e.target.value })}
+                          placeholder="Make a wish and blow out the candles! May all your sweet dreams come true."
+                          className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white"
                         />
                       </div>
                       <p className="text-[9px] text-slate-500">They will tap the cake in interactive view to blow out these candles!</p>

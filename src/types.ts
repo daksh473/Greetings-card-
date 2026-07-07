@@ -45,6 +45,7 @@ export interface BirthdayCardState {
   uploadedMusic?: string; // compressed Base64 MP3 URL or reference
   uploadedMusicName?: string; // custom title of the uploaded file
   passcode?: string; // 4-digit passcode gate for recipient
+  passcodeBgUrl?: string; // custom background image URL/base64 for passcode lock screen
   
   // Custom Dear You card fields
   isDearYou?: boolean;
@@ -56,6 +57,7 @@ export interface BirthdayCardState {
   dearYouMem2?: string;
   dearYouMem3?: string;
   dearYouAge?: number;
+  dearYouCakeWish?: string;
   dearYouHeadline?: string;
   dearYouHeadlinePhoto?: string;
   dearYouNoteText?: string;
