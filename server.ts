@@ -324,6 +324,53 @@ app.patch("/api/cards/:id", (req, res) => {
   }
 });
 
+// API endpoint to shorten URLs via external services (is.gd / tinyurl)
+app.post("/api/shorten", async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) {
+      res.status(400).json({ error: "Missing url parameter" });
+      return;
+    }
+
+    // Try shortening with is.gd first
+    try {
+      const response = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(url)}`);
+      if (response.ok) {
+        const data = await response.json() as any;
+        if (data && data.shorturl) {
+          console.log("Successfully shortened URL using is.gd:", data.shorturl);
+          res.json({ shortUrl: data.shorturl });
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("is.gd shortening failed, falling back to tinyurl", err);
+    }
+
+    // Fallback to tinyurl.com
+    try {
+      const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`);
+      if (response.ok) {
+        const shortUrl = await response.text();
+        if (shortUrl && shortUrl.startsWith("http")) {
+          console.log("Successfully shortened URL using tinyurl:", shortUrl);
+          res.json({ shortUrl });
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("tinyurl shortening failed", err);
+    }
+
+    // If both failed, return the original url
+    res.json({ shortUrl: url });
+  } catch (error: any) {
+    console.error("Error in shorten API:", error);
+    res.status(500).json({ error: "Failed to shorten link" });
+  }
+});
+
 // Start integration with Vite middleware
 async function setupServer() {
   if (process.env.NODE_ENV !== "production") {

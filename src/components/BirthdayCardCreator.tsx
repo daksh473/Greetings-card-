@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BirthdayCardState, SuggestionParams, BirthdayTheme, MusicChoice, InteractiveChallenge, CakeType } from "../types";
 import { encodeCardState, AVATAR_OPTIONS } from "../utils/sharing";
 import { Sparkles, Gift, Music, Copy, Share2, ExternalLink, RefreshCw, Check, AlertCircle, Heart, Star, Send, Trash2, Upload, Lock, Palette, Image as ImageIcon } from "lucide-react";
@@ -70,9 +70,43 @@ export default function BirthdayCardCreator() {
 
   // 3. Generated Share State
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [shortenedLink, setShortenedLink] = useState<string | null>(null);
+  const [isShortening, setIsShortening] = useState(false);
+  const [useShortLink, setUseShortLink] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [generateLinkError, setGenerateLinkError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!generatedLink) {
+      setShortenedLink(null);
+      return;
+    }
+
+    const shortenUrl = async () => {
+      setIsShortening(true);
+      try {
+        const res = await fetch("/api/shorten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: generatedLink })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.shortUrl) {
+            setShortenedLink(data.shortUrl);
+            setUseShortLink(true);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to shorten link:", err);
+      } finally {
+        setIsShortening(false);
+      }
+    };
+
+    shortenUrl();
+  }, [generatedLink]);
 
   // Handler to compress, square-crop, and resize uploaded image on the fly
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -453,15 +487,17 @@ export default function BirthdayCardCreator() {
   };
 
   const copyToClipboard = () => {
-    if (!generatedLink) return;
-    navigator.clipboard.writeText(generatedLink);
+    const linkToCopy = (useShortLink && shortenedLink) ? shortenedLink : generatedLink;
+    if (!linkToCopy) return;
+    navigator.clipboard.writeText(linkToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
   };
 
   const shareOnWhatsApp = () => {
-    if (!generatedLink) return;
-    const text = `🎉 I have created a personalized interactive birthday greeting card for you! Click here to open: ${generatedLink}`;
+    const linkToShare = (useShortLink && shortenedLink) ? shortenedLink : generatedLink;
+    if (!linkToShare) return;
+    const text = `🎉 I have created a personalized interactive birthday greeting card for you! Click here to open: ${linkToShare}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -1872,13 +1908,53 @@ export default function BirthdayCardCreator() {
           {/* LINK REVEAL MODAL PREVIEW */}
           {generatedLink && (
             <div className="bg-[#0f1131] text-amber-100 rounded-3xl border-2 border-emerald-500/50 p-6 shadow-xl space-y-4">
-              <div className="flex items-center space-x-2 text-emerald-400 font-bold text-sm">
-                <Check className="w-5 h-5" />
-                <span>Card generated successfully!</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-emerald-400 font-bold text-sm">
+                  <Check className="w-5 h-5" />
+                  <span>Card generated successfully!</span>
+                </div>
+                {isShortening && (
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full animate-pulse border border-amber-500/20 font-mono">
+                    Shortening...
+                  </span>
+                )}
+                {!isShortening && shortenedLink && (
+                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20 font-semibold font-sans">
+                    ✨ Short Link Ready
+                  </span>
+                )}
               </div>
 
-              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs font-mono select-all break-all text-amber-200">
-                {generatedLink}
+              {/* Link Type Segmented Control/Tabs */}
+              {shortenedLink && (
+                <div className="bg-slate-950/60 p-1 rounded-xl border border-white/5 grid grid-cols-2 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setUseShortLink(true)}
+                    className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                      useShortLink 
+                        ? "bg-rose-500 text-white shadow-md" 
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Short Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUseShortLink(false)}
+                    className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                      !useShortLink 
+                        ? "bg-rose-500 text-white shadow-md" 
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Original Link
+                  </button>
+                </div>
+              )}
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-xs font-mono select-all break-all text-amber-200 min-h-[50px] flex items-center justify-center">
+                {(useShortLink && shortenedLink) ? shortenedLink : generatedLink}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1903,7 +1979,7 @@ export default function BirthdayCardCreator() {
 
               <button
                 type="button"
-                onClick={() => window.open(generatedLink, "_blank")}
+                onClick={() => window.open((useShortLink && shortenedLink) ? shortenedLink : generatedLink, "_blank")}
                 className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-slate-950 p-3.5 rounded-2xl text-xs font-extrabold flex items-center justify-center space-x-2 border-0"
               >
                 <span>TEST GREETING IN NEW WINDOW</span>
