@@ -214,6 +214,32 @@ function CartoonEnvelope({ recipientName, isProtected, dearYouAccent }: { recipi
   );
 }
 
+const bookFlipVariants = {
+  initial: (direction: "forward" | "backward") => ({
+    rotateY: direction === "forward" ? 80 : -80,
+    opacity: 0,
+    scale: 0.96,
+  }),
+  animate: {
+    rotateY: 0,
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.65,
+      ease: [0.25, 1, 0.5, 1],
+    },
+  },
+  exit: (direction: "forward" | "backward") => ({
+    rotateY: direction === "forward" ? -80 : 80,
+    opacity: 0,
+    scale: 0.96,
+    transition: {
+      duration: 0.55,
+      ease: [0.25, 1, 0.5, 1],
+    },
+  }),
+};
+
 export default function BirthdayCardViewer({ state, isInteractivePreview = false, onResetPreview }: BirthdayCardViewerProps) {
   const [envelopeOpened, setEnvelopeOpened] = useState(false);
   const [candlesBlown, setCandlesBlown] = useState(false);
@@ -224,6 +250,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
   const [micActive, setMicActive] = useState(false);
   const [pinterestPage, setPinterestPage] = useState(1);
   const [dearYouStep, setDearYouStep] = useState(1);
+  const [navigationDirection, setNavigationDirection] = useState<'forward' | 'backward'>('forward');
   const [envelopeTouched, setEnvelopeTouched] = useState(false);
 
   // States and refs for passcode gate
@@ -747,6 +774,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     setEnteredPasscode("");
     setPinterestPage(1);
     setDearYouStep(1);
+    setNavigationDirection('forward');
     synth.stopMusic();
     setAudioPlaying(false);
     setActiveQuoteToast(null);
@@ -1107,16 +1135,16 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
               borderLeftColor: state.dearYouAccent || "#B33A2E", 
               borderRightColor: state.dearYouAccent || "#B33A2E", 
               borderBottomColor: state.dearYouAccent || "#B33A2E", 
-              borderTopColor: state.dearYouAccent || "#B33A2E" 
+              borderTopColor: state.dearYouAccent || "#B33A2E",
+              perspective: "1200px",
+              transformStyle: "preserve-3d"
             }}
             className="bg-[#faf6f0] dark:bg-slate-900 rounded-[32px] border-4 shadow-[10px_10px_0px_#4c0519] p-6 md:p-10 relative overflow-hidden flex flex-col justify-between min-h-[500px]"
           >
-            <AnimatePresence mode="wait">
-              {!envelopeOpened ? (
-                /* STEP 1 & 2: INTEGRATED ENVELOPE / PASSCODE GATE */
-                !envelopeTouched ? (
-                  /* Step 1: Closed Envelope inside Scrapbook */
-                  <motion.div
+            <AnimatePresence custom={navigationDirection} mode="wait">
+              {!envelopeOpened && !envelopeTouched && (
+                /* Step 1: Closed Envelope inside Scrapbook */
+                <motion.div
                     key="scrapbook-envelope-closed"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -1148,9 +1176,11 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                       </div>
                     </div>
                   </motion.div>
-                ) : (
-                  /* Step 2: Passcode Entry inside Scrapbook */
-                  <motion.div
+                )}
+
+              {!envelopeOpened && envelopeTouched && (
+                /* Step 2: Passcode Entry inside Scrapbook */
+                <motion.div
                     key="scrapbook-passcode-entry"
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1242,16 +1272,17 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                       ← Back to Envelope
                     </button>
                   </motion.div>
-                )
-              ) : (
-                /* SCRAPBOOK PAGES */
-                <>
-                  {dearYouStep === 1 && (
+                )}
+
+              {envelopeOpened && dearYouStep === 1 && (
                     <motion.div
                       key="dy1"
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: -20, opacity: 0 }}
+                      custom={navigationDirection}
+                      variants={bookFlipVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                       className="py-6 text-center space-y-6"
                     >
                       <div className="text-5xl animate-bounce">💌</div>
@@ -1272,6 +1303,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
 
                       <button
                         onClick={() => {
+                          setNavigationDirection('forward');
                           synth.playSparkle();
                           setDearYouStep(2);
                         }}
@@ -1284,12 +1316,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </motion.div>
                   )}
 
-                  {dearYouStep === 2 && (
+                  {envelopeOpened && dearYouStep === 2 && (
                     <motion.div
                       key="dy2"
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: -20, opacity: 0 }}
+                      custom={navigationDirection}
+                      variants={bookFlipVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                       className="py-1 flex flex-col items-center space-y-4 text-center"
                     >
 
@@ -1312,12 +1347,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </motion.div>
                   )}
 
-                  {dearYouStep === 3 && (
+                  {envelopeOpened && dearYouStep === 3 && (
                     <motion.div
                       key="dy3"
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: -20, opacity: 0 }}
+                      custom={navigationDirection}
+                      variants={bookFlipVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                       className="py-1 flex flex-col items-center space-y-4"
                     >
                       <div className="text-center">
@@ -1353,12 +1391,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </motion.div>
                   )}
 
-                  {dearYouStep === 4 && (
+                  {envelopeOpened && dearYouStep === 4 && (
                     <motion.div
                       key="dy4"
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: -20, opacity: 0 }}
+                      custom={navigationDirection}
+                      variants={bookFlipVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                       className="py-1 text-center flex flex-col items-center space-y-4"
                     >
 <h3 className="text-xl font-extrabold text-[#4c0519] dark:text-amber-100">
@@ -1425,12 +1466,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </motion.div>
                   )}
 
-                  {dearYouStep === 5 && (
+                  {envelopeOpened && dearYouStep === 5 && (
                     <motion.div
                       key="dy5"
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: -20, opacity: 0 }}
+                      custom={navigationDirection}
+                      variants={bookFlipVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                       className="py-1 flex flex-col items-center space-y-4 text-center"
                     >
 <h3 className="text-2xl font-black text-[#4c0519] dark:text-amber-150 leading-tight font-handwriting">
@@ -1453,12 +1497,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </motion.div>
                   )}
 
-                  {dearYouStep === 6 && (
+                  {envelopeOpened && dearYouStep === 6 && (
                     <motion.div
                       key="dy6"
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: -20, opacity: 0 }}
+                      custom={navigationDirection}
+                      variants={bookFlipVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                       className="py-1 text-center flex flex-col items-center space-y-4"
                     >
 
@@ -1486,12 +1533,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </motion.div>
                   )}
 
-                  {dearYouStep === 7 && (
+                  {envelopeOpened && dearYouStep === 7 && (
                     <motion.div
                       key="dy7"
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: -20, opacity: 0 }}
+                      custom={navigationDirection}
+                      variants={bookFlipVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                       className="py-6 text-center space-y-6"
                     >
                       <div className="text-5xl animate-bounce">💖</div>
@@ -1523,8 +1573,6 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                       </button>
                     </motion.div>
                   )}
-                </>
-              )}
             </AnimatePresence>
 
             {/* Navigation controls */}
@@ -1533,7 +1581,10 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                 <button
                   type="button"
                   disabled={dearYouStep === 1}
-                  onClick={() => setDearYouStep(p => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setNavigationDirection('backward');
+                    setDearYouStep(p => Math.max(1, p - 1));
+                  }}
                   className="px-3.5 py-1.5 text-xs text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100/60 rounded-lg font-bold border border-amber-100 disabled:opacity-40 cursor-pointer"
                 >
                   ← Back
@@ -1543,6 +1594,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   <button
                     type="button"
                     onClick={() => {
+                      setNavigationDirection('forward');
                       synth.playSparkle();
                       setDearYouStep(p => p + 1);
                     }}
@@ -1581,9 +1633,13 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
           <motion.div 
             initial={{ scale: 0.98, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            style={{
+              perspective: "1200px",
+              transformStyle: "preserve-3d"
+            }}
             className="bg-gradient-to-tr from-[#fff1f3] via-[#faf6fe] to-[#f0f9ff] text-pink-950 rounded-[32px] border-4 border-[#4c0519] shadow-[10px_10px_0px_#4c0519] p-6 md:p-10 relative overflow-hidden flex flex-col justify-between min-h-[550px] md:min-h-[580px]"
           >
-            <AnimatePresence mode="wait">
+            <AnimatePresence custom={navigationDirection} mode="wait">
               {!envelopeOpened && !envelopeTouched && (
                 /* Step 1: Closed Envelope inside Pinterest */
                 <motion.div
@@ -1718,9 +1774,12 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
               {envelopeOpened && pinterestPage === 1 && (
                   <motion.div
                     key="p1"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
+                    custom={navigationDirection}
+                    variants={bookFlipVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                     className="flex flex-col items-center justify-center text-center py-6 space-y-6"
                   >
                     <motion.span 
@@ -1759,12 +1818,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   </motion.div>
                 )}
 
-                {pinterestPage === 2 && (
+                {envelopeOpened && pinterestPage === 2 && (
                   <motion.div
                     key="p2"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
+                    custom={navigationDirection}
+                    variants={bookFlipVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                     className="flex flex-col justify-between py-2 space-y-4 w-full"
                   >
                     <div className="bg-white/80 rounded-3xl p-6 md:p-8 shadow-sm border border-rose-100 relative max-w-md mx-auto w-full">
@@ -1810,12 +1872,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   </motion.div>
                 )}
 
-                {pinterestPage === 3 && (
+                {envelopeOpened && pinterestPage === 3 && (
                   <motion.div
                     key="p3"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
+                    custom={navigationDirection}
+                    variants={bookFlipVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                     className="py-1 w-full flex flex-col items-center select-none"
                   >
                     <div className="text-center mb-4">
@@ -1894,12 +1959,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   </motion.div>
                 )}
 
-                {pinterestPage === 4 && (
+                {envelopeOpened && pinterestPage === 4 && (
                   <motion.div
                     key="p4"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
+                    custom={navigationDirection}
+                    variants={bookFlipVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                     className="py-1 max-w-md mx-auto w-full text-center select-none"
                   >
                     <div className="bg-white/95 rounded-3xl p-5 md:p-6 border-4 border-[#4c0519] shadow-[6px_6px_0px_#4c0519] space-y-4">
@@ -2071,12 +2139,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   </motion.div>
                 )}
 
-                {pinterestPage === 5 && (
+                {envelopeOpened && pinterestPage === 5 && (
                   <motion.div
                     key="p5"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
+                    custom={navigationDirection}
+                    variants={bookFlipVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
                     className="py-2 max-w-md mx-auto w-full"
                   >
                     <div className="bg-gradient-to-tr from-[#fbf8ff] to-[#f3ebff] border-4 border-[#4c0519] p-6 md:p-8 rounded-[32px] shadow-[6px_6px_0px_#4c0519] space-y-4 font-serif text-slate-800 overflow-hidden relative">
@@ -2113,7 +2184,10 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
               <button
                 type="button"
                 disabled={pinterestPage === 1}
-                onClick={() => setPinterestPage(p => Math.max(1, p - 1))}
+                onClick={() => {
+                  setNavigationDirection('backward');
+                  setPinterestPage(p => Math.max(1, p - 1));
+                }}
                 className="px-3.5 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 rounded-lg font-bold border border-rose-100 disabled:opacity-40 cursor-pointer"
               >
                 ← Back
@@ -2123,6 +2197,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                 <button
                   type="button"
                   onClick={() => {
+                    setNavigationDirection('forward');
                     synth.playSparkle();
                     setPinterestPage(p => p + 1);
                   }}
