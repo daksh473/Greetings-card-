@@ -221,6 +221,34 @@ export default function BirthdayCardCreator() {
     });
   };
 
+  // Handler to upload and parse custom background photo or video
+  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isVideo = file.type.startsWith("video/");
+    const isImage = file.type.startsWith("image/");
+
+    if (!isImage && !isVideo) {
+      setImageUploadError("Please choose a valid background image (PNG/JPG) or video (MP4/WebM) file.");
+      return;
+    }
+
+    setImageUploadError(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Data = event.target?.result as string;
+      setFormState((prev) => ({
+        ...prev,
+        customBgType: isVideo ? "video" : "image",
+        customBgUrl: base64Data,
+        customBgOpacity: prev.customBgOpacity !== undefined ? prev.customBgOpacity : 45,
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Handler to upload and parse custom background soundtrack MP3 up to 1.5MB
   const handleMusicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1055,6 +1083,52 @@ export default function BirthdayCardCreator() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Custom Soundtrack MP3 Upload (Dear You) */}
+                      <div className="pt-2.5 border-t border-dashed border-amber-100 dark:border-amber-900/20">
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Custom Soundtrack MP3 (Max 1.2MB)</label>
+                        <p className="text-[8px] text-slate-400 mb-1.5 leading-relaxed">
+                          Provide an MP3 audio file to override the default background music for your scrapbook story.
+                        </p>
+
+                        {formState.uploadedMusic ? (
+                          <div className="bg-amber-50/50 dark:bg-slate-950/30 rounded-lg p-2 border border-amber-100 dark:border-amber-900/20 flex items-center justify-between">
+                            <div className="flex items-center space-x-2 truncate">
+                              <span className="text-xs">🎵</span>
+                              <div className="truncate text-left">
+                                <span className="text-[10px] font-black text-amber-900 dark:text-amber-100 block truncate">{formState.uploadedMusicName || "uploaded-music"}</span>
+                                <span className="text-[8px] text-amber-500 capitalize">soundtrack ready!</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormState({
+                                  ...formState,
+                                  uploadedMusic: undefined,
+                                  uploadedMusicName: undefined,
+                                  music: "piano"
+                                });
+                              }}
+                              className="text-[9px] text-red-500 hover:text-red-700 font-extrabold cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/30 px-1.5 py-0.5 rounded border-0 bg-transparent"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-dashed border-amber-300 hover:border-amber-500 bg-white dark:bg-slate-950 hover:bg-amber-50/20 rounded-lg cursor-pointer transition-all">
+                            <Music className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-[10px] font-bold text-amber-600">Upload background MP3 audio</span>
+                            <input
+                              type="file"
+                              accept="audio/*"
+                              onChange={handleMusicUpload}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+
                     </div>
 
                   </div>
@@ -1498,6 +1572,160 @@ export default function BirthdayCardCreator() {
                   <option value="unicorn">Rainbow Pastel Sparkle Unicorn</option>
                 </select>
               </div>
+            </div>
+
+            {/* CUSTOM BACKGROUND DESIGNER */}
+            <div className="pt-4 border-t border-dashed border-slate-100 dark:border-slate-850 space-y-4">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide">🖼️ Custom Card Background (Photo or Video)</label>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "color", label: "Default Theme" },
+                  { id: "image", label: "Custom Photo" },
+                  { id: "video", label: "Custom Video" },
+                ].map((bgType) => (
+                  <button
+                    key={bgType.id}
+                    type="button"
+                    onClick={() => {
+                      setFormState({
+                        ...formState,
+                        customBgType: bgType.id as any,
+                        // Clear background if default theme is selected
+                        customBgUrl: bgType.id === "color" ? undefined : formState.customBgUrl,
+                      });
+                    }}
+                    className={`py-2 rounded-xl text-xs text-center border cursor-pointer font-bold transition-all ${
+                      (formState.customBgType || "color") === bgType.id
+                        ? "bg-slate-900 border-indigo-500 text-white"
+                        : "bg-slate-50 dark:bg-slate-950 border-slate-150 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
+                    }`}
+                  >
+                    {bgType.label}
+                  </button>
+                ))}
+              </div>
+
+              {formState.customBgType && formState.customBgType !== "color" && (
+                <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-fade-in">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">
+                      Option A: Upload Background File (Max 2MB)
+                    </label>
+                    <label className="flex items-center justify-center gap-1.5 px-3 py-2 border border-dashed border-indigo-300 hover:border-indigo-500 bg-white dark:bg-slate-900 rounded-xl cursor-pointer transition-all">
+                      <Upload className="w-4 h-4 text-indigo-500" />
+                      <span className="text-xs font-bold text-indigo-600">
+                        {formState.customBgUrl?.startsWith("data:") ? "Replace custom file" : `Upload background ${formState.customBgType}`}
+                      </span>
+                      <input
+                        type="file"
+                        accept={formState.customBgType === "video" ? "video/*" : "image/*"}
+                        onChange={handleBackgroundUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="flex items-center text-slate-400 my-1 justify-center space-x-2 text-[10px] font-mono">
+                    <span className="h-[1px] w-8 bg-slate-200 dark:bg-slate-800" />
+                    <span>OR</span>
+                    <span className="h-[1px] w-8 bg-slate-200 dark:bg-slate-800" />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">
+                      Option B: Paste Direct Web URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder={
+                        formState.customBgType === "video"
+                          ? "https://example.com/birthday-video.mp4"
+                          : "https://example.com/gorgeous-photo.jpg"
+                      }
+                      value={formState.customBgUrl && !formState.customBgUrl.startsWith("data:") ? formState.customBgUrl : ""}
+                      onChange={(e) => {
+                        setFormState({
+                          ...formState,
+                          customBgUrl: e.target.value || undefined,
+                        });
+                      }}
+                      className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 rounded-xl text-xs text-slate-800 dark:text-white placeholder:text-slate-400"
+                    />
+                    <p className="text-[8px] text-slate-400 mt-1">
+                      Direct URLs bypass file size limits and are highly recommended for large high-definition media!
+                    </p>
+                  </div>
+
+                  {formState.customBgUrl && (
+                    <div className="pt-2 border-t border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" /> Background Media is Active
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormState({
+                              ...formState,
+                              customBgUrl: undefined,
+                            });
+                          }}
+                          className="text-[10px] text-red-500 hover:text-red-700 font-bold border-0 bg-transparent cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      </div>
+
+                      {/* Preview Thumb */}
+                      <div className="aspect-video w-full rounded-lg overflow-hidden bg-slate-900 relative flex items-center justify-center border border-slate-200 dark:border-slate-800">
+                        {formState.customBgType === "video" ? (
+                          <video
+                            src={formState.customBgUrl}
+                            muted
+                            autoPlay
+                            loop
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={formState.customBgUrl}
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center text-[10px] text-white font-mono font-bold">
+                          Live Background Preview
+                        </div>
+                      </div>
+
+                      {/* Opacity Slider */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                          <span>OVERLAY DARKNESS</span>
+                          <span>{formState.customBgOpacity ?? 45}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={formState.customBgOpacity ?? 45}
+                          onChange={(e) => {
+                            setFormState({
+                              ...formState,
+                              customBgOpacity: parseInt(e.target.value),
+                            });
+                          }}
+                          className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <p className="text-[8px] text-slate-400">
+                          Higher darkness helps text pop. Slide left to make the background media fully bright and clear!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

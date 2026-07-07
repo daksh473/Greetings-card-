@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { BirthdayCardState } from "../types";
 import { synth } from "../utils/audio";
 import { AVATAR_OPTIONS } from "../utils/sharing";
-import { Gift, Volume2, VolumeX, Sparkles, RefreshCw, Flame, Check, HelpCircle, Heart, Star, ArrowRight } from "lucide-react";
+import { Gift, Volume2, VolumeX, Sparkles, RefreshCw, Flame, Check, HelpCircle, Heart, Star, ArrowRight, Lock, Unlock } from "lucide-react";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -22,6 +22,198 @@ interface FloatingBalloon {
   delay: number;
 }
 
+function CartoonEnvelope({ recipientName, isProtected, dearYouAccent }: { recipientName: string; isProtected: boolean; dearYouAccent?: string }) {
+  return (
+    <div className="relative w-64 h-44 md:w-72 md:h-48 drop-shadow-[0_12px_24px_rgba(60,31,31,0.15)] hover:scale-105 active:scale-95 hover:-translate-y-1 transition-all duration-300">
+      <svg
+        viewBox="0 0 320 220"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-full h-full filter select-none"
+      >
+        {/* Shadow layer underneath the envelope */}
+        <rect x="12" y="14" width="296" height="196" rx="38" fill="#3c1f1f" opacity="0.08" />
+
+        {/* Base Envelope (Rounded Rect outline and background) */}
+        {/* We use #fbf7ed for the primary creamy off-white color */}
+        <rect
+          x="10"
+          y="10"
+          width="300"
+          height="200"
+          rx="38"
+          fill="#fbf7ed"
+          stroke="#3c1f1f"
+          strokeWidth="7"
+          strokeLinejoin="round"
+        />
+
+        {/* Side Flaps (Warm cream shadow fill underneath top/bottom folds) */}
+        {/* Left Flap Path */}
+        <path
+          d="M 13.5 48 C 13.5 48, 80 110, 120 110 C 80 110, 13.5 172, 13.5 172"
+          fill="#f4eae0"
+          opacity="0.5"
+        />
+        {/* Right Flap Path */}
+        <path
+          d="M 306.5 48 C 306.5 48, 240 110, 200 110 C 240 110, 306.5 172, 306.5 172"
+          fill="#f4eae0"
+          opacity="0.5"
+        />
+
+        {/* White Glossy Highlight on top edge of the envelope */}
+        <path
+          d="M 50 16 H 270"
+          stroke="#ffffff"
+          strokeWidth="5"
+          strokeLinecap="round"
+          opacity="0.75"
+        />
+        {/* Soft highlight reflection on bottom edge */}
+        <path
+          d="M 54 204 H 266"
+          stroke="#ffffff"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          opacity="0.4"
+        />
+
+        {/* FOLD CREASE LINES */}
+        {/* Top flap creases coming from top-left/right corners to the center */}
+        <path
+          d="M 13 42 C 60 75, 110 98, 132 104"
+          stroke="#3c1f1f"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 307 42 C 260 75, 210 98, 188 104"
+          stroke="#3c1f1f"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+
+        {/* Bottom flap creases curving up from bottom-left/right to the heart */}
+        <path
+          d="M 14 175 C 60 155, 110 130, 130 118"
+          stroke="#3c1f1f"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 306 175 C 260 155, 210 130, 190 118"
+          stroke="#3c1f1f"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+
+        {/* Shading creases inside the flaps to match the hand-drawn detail lines of the image */}
+        <path
+          d="M 24 160 C 50 145, 90 128, 115 118"
+          stroke="#3c1f1f"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          opacity="0.25"
+        />
+        <path
+          d="M 296 160 C 270 145, 230 128, 205 118"
+          stroke="#3c1f1f"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          opacity="0.25"
+        />
+        
+        {/* Seam line below the heart sticker */}
+        <path
+          d="M 120 118 C 140 128, 180 128, 200 118"
+          stroke="#3c1f1f"
+          strokeWidth="4"
+          fill="none"
+          opacity="0.85"
+          strokeLinecap="round"
+        />
+
+        {/* Recipient Name written in a cute cursive / hand-drawn style directly on the envelope */}
+        <g transform="translate(160, 48)">
+          <text
+            textAnchor="middle"
+            fill="#3c1f1f"
+            fontFamily="Georgia, serif"
+            fontSize="15"
+            fontWeight="bold"
+            fontStyle="italic"
+            letterSpacing="1"
+            className="tracking-wider opacity-85 select-none"
+          >
+            To: {recipientName}
+          </text>
+        </g>
+
+        {/* CENTRAL HEART SEAL */}
+        {/* We center the heart at x=160, y=122 */}
+        <g transform="translate(160, 122)">
+          {/* Heart Drop Shadow for pop-out 3D cartoon look */}
+          <path
+            d="M 0,28 C -12,14 -40,-2 -40,-22 C -40,-38 -28,-50 -12,-50 C -2,-50 0,-42 0,-42 C 0,-42 2,-50 12,-50 C 28,-50 40,-38 40,-22 C 40,-2 12,14 0,28 Z"
+            fill="#3c1f1f"
+            opacity="0.12"
+            transform="translate(0, 5) scale(1.08)"
+          />
+
+          {/* Heart Dark Pink Base (creates the bottom-right shadow) */}
+          <path
+            d="M 0,28 C -12,14 -40,-2 -40,-22 C -40,-38 -28,-50 -12,-50 C -2,-50 0,-42 0,-42 C 0,-42 2,-50 12,-50 C 28,-50 40,-38 40,-22 C 40,-2 12,14 0,28 Z"
+            fill="#e2576b"
+            stroke="#3c1f1f"
+            strokeWidth="7"
+            strokeLinejoin="round"
+          />
+
+          {/* Heart Bright Pink Front (slightly shifted up-left for 3D bevel look) */}
+          <path
+            d="M 0,28 C -12,14 -40,-2 -40,-22 C -40,-38 -28,-50 -12,-50 C -2,-50 0,-42 0,-42 C 0,-42 2,-50 12,-50 C 28,-50 40,-38 40,-22 C 40,-2 12,14 0,28 Z"
+            fill="#ff7081"
+            transform="translate(-2, -3) scale(0.96)"
+          />
+
+          {/* Glossy White highlight on top-left lobe */}
+          <path
+            d="M -26,-30 C -26,-30 -30,-22 -26,-12 C -24,-8 -18,-12 -18,-16 C -18,-24 -24,-28 -26,-30 Z"
+            fill="#ffffff"
+            opacity="0.75"
+          />
+          {/* Subtle reflection on bottom-right lobe */}
+          <path
+            d="M 12,-4 C 18,6 24,-2 24,-10"
+            stroke="#ffffff"
+            strokeWidth="3"
+            strokeLinecap="round"
+            opacity="0.45"
+          />
+
+          {/* Mini overlay lock / key indicator if passcode is protected */}
+          {isProtected && (
+            <g transform="translate(0, -6) scale(0.85)">
+              {/* Small Lock Graphic inside the pink heart */}
+              <rect x="-8" y="-1" width="16" height="13" rx="3" fill="#ffffff" stroke="#3c1f1f" strokeWidth="2.5" />
+              <path d="M -5,-1 V -5 C -5,-8 -3,-10 0,-10 C 3,-10 5,-8 5,-5 V -1" stroke="#3c1f1f" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+              <circle cx="0" cy="5" r="1.5" fill="#3c1f1f" />
+            </g>
+          )}
+        </g>
+
+        {/* Pulse helper glow if interactive */}
+        <circle cx="160" cy="122" r="32" stroke={dearYouAccent || "#f43f5e"} strokeWidth="2" strokeDasharray="4 4" className="animate-spin" opacity="0.35" />
+      </svg>
+
+      {/* Floating Sparkles around the heart to draw click attention */}
+      <div className="absolute top-[48%] left-[45%] pointer-events-none text-xl animate-ping opacity-75">✨</div>
+      <div className="absolute top-[58%] right-[42%] pointer-events-none text-base animate-bounce opacity-55">❤️</div>
+    </div>
+  );
+}
+
 export default function BirthdayCardViewer({ state, isInteractivePreview = false, onResetPreview }: BirthdayCardViewerProps) {
   const [envelopeOpened, setEnvelopeOpened] = useState(false);
   const [candlesBlown, setCandlesBlown] = useState(false);
@@ -32,6 +224,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
   const [micActive, setMicActive] = useState(false);
   const [pinterestPage, setPinterestPage] = useState(1);
   const [dearYouStep, setDearYouStep] = useState(1);
+  const [envelopeTouched, setEnvelopeTouched] = useState(false);
 
   // States and refs for passcode gate
   const [passcodeVerified, setPasscodeVerified] = useState(false);
@@ -549,6 +742,9 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     setCandlesBlown(false);
     setGiftDiscovered(false);
     setEnvelopeOpened(false);
+    setEnvelopeTouched(false);
+    setPasscodeVerified(false);
+    setEnteredPasscode("");
     setPinterestPage(1);
     setDearYouStep(1);
     synth.stopMusic();
@@ -700,89 +896,36 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     );
   };
 
-  // Render Passcode Gate if required
-  if (state.passcode && state.passcode.length === 4 && !passcodeVerified) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-gradient-to-br from-[#fff1f2] via-[#faf5ff] to-[#f0fdf4] font-sans text-pink-950">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-sm w-full bg-white border-4 border-[#4c0519] rounded-[32px] p-8 shadow-[8px_8px_0px_#4c0519] text-center space-y-6"
-        >
-          <div className="text-4xl">🔐</div>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-black font-sans tracking-tight">For Your Eyes Only</h1>
-            <p className="text-xs text-slate-500 font-medium">This secret surprise requires a 4-digit passcode to unlock.</p>
-          </div>
-
-          <div className="flex justify-center gap-3">
-            {Array.from({ length: 4 }).map((_, idx) => {
-              const char = enteredPasscode[idx] || "";
-              return (
-                <div
-                  key={idx}
-                  className={`w-12 h-14 rounded-xl border-2 flex items-center justify-center text-xl font-bold font-mono transition-all ${
-                    passcodeError
-                      ? "border-red-500 bg-red-50 text-red-600 animate-shake"
-                      : char
-                      ? "border-[#4c0519] bg-pink-50 text-[#4c0519]"
-                      : "border-slate-200 bg-slate-50 text-slate-400"
-                  }`}
-                >
-                  {char ? "•" : ""}
-                </div>
-              );
-            })}
-          </div>
-
-          {passcodeError && (
-            <p className="text-xs font-bold text-red-500 animate-pulse">
-              Wrong passcode! Hint: check with the sender or try again.
-            </p>
-          )}
-
-          {/* Hidden text input for typing on desktop/mobile */}
-          <input
-            type="text"
-            pattern="[0-9]*"
-            inputMode="numeric"
-            maxLength={4}
-            value={enteredPasscode}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-              setEnteredPasscode(val);
-              setPasscodeError(false);
-              
-              if (val.length === 4) {
-                if (val === state.passcode) {
-                  synth.playSparkle();
-                  confetti({ particleCount: 40, spread: 40 });
-                  setPasscodeVerified(true);
-                } else {
-                  synth.playPop();
-                  setPasscodeError(true);
-                  setTimeout(() => {
-                    setEnteredPasscode("");
-                    setPasscodeError(false);
-                  }, 1200);
-                }
-              }
-            }}
-            className="w-full border border-slate-250 p-2.5 rounded-xl text-center text-xs tracking-widest bg-slate-50 border-dashed focus:outline-[#4c0519]"
-            placeholder="Type code here..."
-            autoFocus
-          />
-
-          <div className="text-[10px] text-slate-400 font-mono">
-            Sender relationship: <span className="font-bold text-[#4c0519]">{state.relationship || "friend"}</span>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className={themeStyle.bg}>
+      {/* Custom Background Video or Photo */}
+      {state.customBgType && state.customBgType !== "color" && state.customBgUrl && (
+        <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+          {state.customBgType === "video" ? (
+            <video
+              src={state.customBgUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={state.customBgUrl}
+              alt="Custom Card Background"
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          )}
+          {/* Adjustable dark overlay to maintain legibility */}
+          <div 
+            className="absolute inset-0 bg-slate-950 transition-all duration-300" 
+            style={{ opacity: (state.customBgOpacity ?? 45) / 100 }}
+          />
+        </div>
+      )}
+
       {/* Background decorations depending on Theme & Emotion */}
       {emotion === "emotional" && (
         <div className="absolute inset-0 pointer-events-none">
@@ -887,48 +1030,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
         )}
       </AnimatePresence>
 
-      {/* STAGE 1: UNOPENED ENVELOPE / SPLASH SCREEN */}
-      <AnimatePresence>
-        {!envelopeOpened && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-lg">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="max-w-md w-full text-center bg-[#15122e] border-2 border-indigo-400/40 rounded-3xl p-8 shadow-2xl relative overflow-hidden"
-              id="birthday-envelope-card"
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
-              <div className="text-5xl mb-4 animate-bounce">✉️</div>
-              
-              <h1 className="text-2xl font-black text-white tracking-tight mb-2">
-                A Surprising Wish is Waiting!
-              </h1>
-              
-              <p className="text-indigo-200/80 font-light text-sm mb-6">
-                A custom personalized interactive birthday card has been hand-crafted for{" "}
-                <strong className="text-amber-400 font-bold">{state.recipientName}</strong>. 
-                Turn on your audio for the optimal festive animation experience!
-              </p>
 
-              <div className="border border-indigo-500/20 rounded-2xl p-4 bg-slate-900/40 mb-6 flex flex-col items-center justify-center">
-                <span className="text-xs text-indigo-300 font-mono tracking-wider uppercase mb-1">Surprise from</span>
-                <span className="text-lg font-black text-white bg-clip-text bg-gradient-to-r from-pink-400 to-amber-300">
-                  {state.relationship ? `Your ${state.relationship}` : "A Loving Buddy"}
-                </span>
-              </div>
-
-              <button
-                onClick={triggerOpenCard}
-                className="w-full bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-black py-4 px-6 rounded-2xl shadow-lg border border-rose-400/30 transition-transform active:scale-95 flex items-center justify-center space-x-3 group"
-              >
-                <span>OPEN SURPRISE CARD</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* BALLOONS BACKGROUND LAYER */}
       {envelopeOpened && (
@@ -979,7 +1081,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                       <div className="w-0.5 h-16 bg-slate-900/10 absolute -bottom-16 left-1/2 transform -translate-x-1/2" />
                       {/* Floating particle sparkle inside balloon */}
                       <div className="w-1/3 h-1/3 bg-white/25 rounded-full absolute top-1.5 left-2" />
-                      <span className="text-xs pointer-events-none drop-shadow">🎈</span>
+                      <span className="text-xs pointer-events-none opacity-80">🎈</span>
                     </>
                   )}
                 </motion.div>
@@ -987,335 +1089,446 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
           )}
         </div>
       )}
+
       {/* MAIN CARDS CONTENT CONTAINER */}
-      {envelopeOpened && (
-        state.isDearYou ? (
-          /* Render Dear You Scrapbook Book */
-          <div className="max-w-2xl mx-auto px-4 py-8 md:py-16 flex flex-col justify-center min-h-screen relative z-20 font-sans text-[#4c0519] select-none">
-            {/* Cute floating sparkles and paper theme accents */}
-            <div className="absolute top-10 left-10 text-xl opacity-50 animate-float">💌</div>
-            <div className="absolute top-20 right-12 text-2xl opacity-50 animate-float delay-1000">✨</div>
-            <div className="absolute bottom-16 left-16 text-lg opacity-50 animate-float delay-2000">🎈</div>
+      {state.isDearYou ? (
+        /* Render Dear You Scrapbook Book */
+        <div className="max-w-2xl mx-auto px-4 py-8 md:py-16 flex flex-col justify-center min-h-screen relative z-20 font-sans text-[#4c0519] select-none">
+          {/* Cute floating sparkles and paper theme accents */}
+          <div className="absolute top-10 left-10 text-xl opacity-50 animate-float">💌</div>
+          <div className="absolute top-20 right-12 text-2xl opacity-50 animate-float delay-1000">✨</div>
+          <div className="absolute bottom-16 left-16 text-lg opacity-50 animate-float delay-2000">🎈</div>
 
-            {/* Top Persistent Progress Indicator & Clickable Navigation Tabs */}
-            <div className="mb-6 flex flex-wrap items-center justify-center gap-1 max-w-xl mx-auto text-[10px] md:text-xs font-bold tracking-widest uppercase bg-amber-50/80 dark:bg-slate-900/60 p-2 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-xs relative z-30">
-              {[1, 2, 3, 4, 5, 6, 7].map((pageNum) => (
-                <button
-                  key={pageNum}
-                  type="button"
-                  onClick={() => {
-                    synth.playSparkle();
-                    setDearYouStep(pageNum);
-                  }}
-                  className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${
-                    dearYouStep === pageNum
-                      ? "bg-amber-600 text-white font-black shadow-xs"
-                      : "text-amber-800 dark:text-amber-400 hover:bg-amber-100/50 font-semibold"
-                  }`}
-                >
-                  Step {pageNum}
-                </button>
-              ))}
-            </div>
-
-            {/* Main Polaroid / Scrapbook Card Deck */}
-            <motion.div 
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              style={{ 
-                borderLeftColor: state.dearYouAccent || "#B33A2E", 
-                borderRightColor: state.dearYouAccent || "#B33A2E", 
-                borderBottomColor: state.dearYouAccent || "#B33A2E", 
-                borderTopColor: state.dearYouAccent || "#B33A2E" 
-              }}
-              className="bg-[#faf6f0] dark:bg-slate-900 rounded-[32px] border-4 shadow-[10px_10px_0px_#4c0519] p-6 md:p-10 relative overflow-hidden flex flex-col justify-between min-h-[500px]"
-            >
-              <AnimatePresence mode="wait">
-                {dearYouStep === 1 && (
+          {/* Main Polaroid / Scrapbook Card Deck */}
+          <motion.div 
+            initial={{ scale: 0.98, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            style={{ 
+              borderLeftColor: state.dearYouAccent || "#B33A2E", 
+              borderRightColor: state.dearYouAccent || "#B33A2E", 
+              borderBottomColor: state.dearYouAccent || "#B33A2E", 
+              borderTopColor: state.dearYouAccent || "#B33A2E" 
+            }}
+            className="bg-[#faf6f0] dark:bg-slate-900 rounded-[32px] border-4 shadow-[10px_10px_0px_#4c0519] p-6 md:p-10 relative overflow-hidden flex flex-col justify-between min-h-[500px]"
+          >
+            <AnimatePresence mode="wait">
+              {!envelopeOpened ? (
+                /* STEP 1 & 2: INTEGRATED ENVELOPE / PASSCODE GATE */
+                !envelopeTouched ? (
+                  /* Step 1: Closed Envelope inside Scrapbook */
                   <motion.div
-                    key="dy1"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="py-6 text-center space-y-6"
+                    key="scrapbook-envelope-closed"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    onClick={() => {
+                      synth.playSparkle();
+                      if (state.passcode && state.passcode.length === 4) {
+                        setEnvelopeTouched(true);
+                      } else {
+                        triggerOpenCard();
+                      }
+                    }}
+                    className="cursor-pointer group flex flex-col items-center py-8 space-y-6 text-center"
                   >
-                    <div className="text-5xl animate-bounce">💌</div>
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-bold tracking-widest text-amber-600 uppercase">dear you...</h3>
-                      <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[#4c0519] dark:text-amber-100 font-handwriting">
-                        A Beautiful Birthday Story
+                    <CartoonEnvelope
+                      recipientName={state.recipientName || "Bestie"}
+                      isProtected={!!(state.passcode && state.passcode.length === 4)}
+                      dearYouAccent={state.dearYouAccent}
+                    />
+                    <div className="space-y-3">
+                      <h2 className="text-3xl font-black text-[#4c0519] dark:text-amber-100 tracking-tight leading-none font-handwriting">
+                        {state.recipientName}'s Surprise Card
                       </h2>
-                      <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                        A cozy hand-crafted scrapbook has been made with so much love to celebrate another wonderful year of your life.
+                      <p className="text-slate-600 dark:text-slate-400 font-light text-xs max-w-sm mx-auto">
+                        A personalized magical scrapbook created with love. Tap the envelope to open it!
+                      </p>
+                      <div className="inline-block px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-[10px] text-amber-800 dark:text-amber-300 font-mono font-bold">
+                        From: {state.relationship ? `Your ${state.relationship}` : "Someone Special"}
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  /* Step 2: Passcode Entry inside Scrapbook */
+                  <motion.div
+                    key="scrapbook-passcode-entry"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    className="space-y-6 py-6 text-center flex flex-col items-center"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-full bg-amber-500/10 border-2 border-amber-500/35 flex items-center justify-center text-amber-600 mb-3">
+                        <Lock className="w-5 h-5" />
+                      </div>
+                      <h2 className="text-2xl font-black text-[#4c0519] dark:text-amber-100 font-handwriting tracking-tight">Unlock Scrapbook</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
+                        Please enter the 4-digit passcode to unlock your birthday card.
                       </p>
                     </div>
 
-                    <div className="p-4 bg-white/60 dark:bg-slate-950/40 rounded-2xl border border-dashed border-amber-200 dark:border-amber-900/30 inline-block">
-                      <span className="text-[10px] text-slate-450 block font-mono">RECIPIENT:</span>
-                      <span className="text-xl font-black text-[#4c0519] dark:text-amber-200 block font-handwriting">{state.recipientName}</span>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        synth.playSparkle();
-                        setDearYouStep(2);
-                      }}
-                      style={{ backgroundColor: state.dearYouAccent || "#B33A2E" }}
-                      className="mx-auto px-6 py-3 text-white text-xs font-black tracking-widest uppercase rounded-full shadow-lg hover:brightness-115 cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 border-0"
-                    >
-                      <span>Begin Story</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </motion.div>
-                )}
-
-                {dearYouStep === 2 && (
-                  <motion.div
-                    key="dy2"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="py-1 flex flex-col items-center space-y-4 text-center"
-                  >
-                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Page 2: Our Favorite Person</span>
-                    
-                    {/* Polaroid Frame */}
-                    <div className="bg-white p-3 pb-8 rounded-sm shadow-xl border border-slate-250/50 max-w-xs rotate-[-2deg] hover:rotate-0 transition-transform duration-300 relative group">
-                      <div className="absolute top-[-8px] left-1/2 transform -translate-x-1/2 w-16 h-4 bg-amber-200/50 border border-amber-300/20 rotate-[-1deg] rounded-sm flex items-center justify-center shadow-xs" />
-                      <div className="aspect-square w-60 h-60 bg-amber-50/50 overflow-hidden rounded-xs border border-slate-100">
-                        {state.dearYouFavoritePhoto ? (
-                          <img src={state.dearYouFavoritePhoto} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" referrerPolicy="no-referrer" />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-pink-100 to-amber-100 text-[#4c0519]">
-                            <span className="text-4xl animate-float">🥰</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-4 font-handwriting text-[#4c0519] italic text-md text-center max-w-[220px] mx-auto min-h-[40px] flex items-center justify-center">
-                        "{state.dearYouFavoriteQuote || "the one who brightens every ordinary Tuesday with magic."}"
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {dearYouStep === 3 && (
-                  <motion.div
-                    key="dy3"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="py-1 flex flex-col items-center space-y-4"
-                  >
-                    <div className="text-center">
-                      <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest block">Page 3: Cozy Album</span>
-                      <h3 className="text-2xl font-black mt-1 text-[#4c0519] dark:text-amber-100 font-handwriting">{state.dearYouMemoryCaption || "sweet chapters of us ♡"}</h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto py-2">
-                      {[
-                        { key: "dearYouMem0", rotate: "rotate-[-3deg]", fallbackEmoji: "📸" },
-                        { key: "dearYouMem1", rotate: "rotate-[2deg]", fallbackEmoji: "☕" },
-                        { key: "dearYouMem2", rotate: "rotate-[1.5deg]", fallbackEmoji: "🎒" },
-                        { key: "dearYouMem3", rotate: "rotate-[-1.5deg]", fallbackEmoji: "🥐" }
-                      ].map((mem, idx) => {
-                        const imgUrl = (state as any)[mem.key];
+                    <div className="flex justify-center gap-3 my-4">
+                      {Array.from({ length: 4 }).map((_, idx) => {
+                        const char = enteredPasscode[idx] || "";
                         return (
                           <div
-                            key={mem.key}
-                            className={`bg-white p-2 pb-5 rounded-xs border border-slate-200 shadow-md flex flex-col items-center relative group transition-transform hover:scale-105 hover:rotate-0 ${mem.rotate}`}
+                            key={idx}
+                            className={`w-12 h-14 rounded-2xl border-2 flex items-center justify-center text-xl font-bold font-mono transition-all duration-300 ${
+                              passcodeError
+                                ? "border-red-500 bg-red-50 dark:bg-red-950/20 text-red-500 animate-shake"
+                                : char
+                                ? "border-amber-500 bg-amber-50 dark:bg-amber-950/50 text-amber-600"
+                                : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 text-slate-400"
+                            }`}
                           >
-                            <div className="absolute top-[-6px] left-1/2 transform -translate-x-1/2 w-10 h-3 bg-amber-200/40 border border-amber-300/10 rotate-[-1deg]" />
-                            <div className="aspect-square w-full bg-slate-50/50 rounded-xs overflow-hidden border border-slate-100 flex items-center justify-center">
-                              {imgUrl ? (
-                                <img src={imgUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                              ) : (
-                                <span className="text-2xl">{mem.fallbackEmoji}</span>
-                              )}
-                            </div>
-                            <span className="mt-1.5 text-[9px] font-mono font-bold text-slate-400">#memory0{idx + 1}</span>
+                            {char ? "•" : ""}
                           </div>
                         );
                       })}
                     </div>
-                  </motion.div>
-                )}
 
-                {dearYouStep === 4 && (
-                  <motion.div
-                    key="dy4"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="py-1 text-center flex flex-col items-center space-y-4"
-                  >
-                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Page 4: Make A Wish</span>
-                    <h3 className="text-xl font-extrabold text-[#4c0519] dark:text-amber-100">
-                      Blow out the candles! 🎂
-                    </h3>
-                    
-                    {/* Render customized cake */}
-                    <div className="relative scale-90 md:scale-95 my-4" onClick={() => !candlesBlown && triggerCandleBlow()}>
-                      {/* Candles list */}
-                      <div className="flex justify-center space-x-3 mb-[-12px] relative z-10">
-                        {Array.from({ length: Math.min(12, state.dearYouAge || 7) }).map((_, idx) => (
-                          <div key={idx} className="flex flex-col items-center relative">
-                            {/* Flame */}
-                            {!candlesBlown && (
-                              <motion.div
-                                animate={{
-                                  scale: [1, 1.25, 1],
-                                  y: [0, -2, 0],
-                                }}
-                                transition={{
-                                  repeat: Infinity,
-                                  duration: 0.4 + idx * 0.05,
-                                  ease: "easeInOut",
-                                }}
-                                className="w-2.5 h-4 bg-gradient-to-t from-red-500 via-yellow-400 to-amber-100 rounded-full blur-[1px] absolute -top-4"
-                              />
-                            )}
-                            {/* Candle Body */}
-                            <div className={`w-2 h-8 bg-gradient-to-b from-amber-300 to-amber-500 border border-slate-900 rounded-sm ${candlesBlown ? "opacity-60" : ""}`} />
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Cake layers */}
-                      <div className="w-44 h-8 bg-pink-350 border border-slate-900 rounded-t-lg relative shadow-md">
-                        {/* Dripping frosting */}
-                        <div className="absolute -bottom-1.5 left-2 w-3 h-3 rounded-full bg-inherit" />
-                        <div className="absolute -bottom-2 left-10 w-4 h-4 rounded-full bg-inherit" />
-                        <div className="absolute -bottom-1.5 left-24 w-3 h-3 rounded-full bg-inherit" />
-                        <div className="absolute -bottom-2 left-32 w-3.5 h-4 rounded-full bg-inherit" />
-                      </div>
-                      <div className="w-52 h-16 bg-amber-100 border border-slate-900 rounded-b-lg relative z-[-1] overflow-hidden flex items-center justify-center font-bold text-xs uppercase tracking-wider text-slate-800/40 font-handwriting">
-                        Happy Birthday
-                      </div>
-                      {/* Plate */}
-                      <div className="w-56 h-2.5 bg-slate-350 border border-slate-900 rounded-full shadow-md mt-[-2px] mx-auto" />
-                    </div>
-
-                    <div className="mt-2 text-center">
-                      {candlesBlown ? (
-                        <div className="inline-flex items-center space-x-1.5 text-emerald-600 bg-emerald-50 px-4 py-1 rounded-full border border-emerald-200 text-xs font-bold">
-                          <Check className="w-4 h-4" />
-                          <span>Secret wish blown into the universe!</span>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => !candlesBlown && triggerCandleBlow()}
-                          className="text-xs bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-1.5 rounded-full shadow-sm animate-pulse cursor-pointer border-0"
-                        >
-                          Tap to Blow Out Candles
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
-                {dearYouStep === 5 && (
-                  <motion.div
-                    key="dy5"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="py-1 flex flex-col items-center space-y-4 text-center"
-                  >
-                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Page 5: The Big Reveal</span>
-                    <h3 className="text-2xl font-black text-[#4c0519] dark:text-amber-150 leading-tight font-handwriting">
-                      {state.dearYouHeadline || "a lifetime of happy moments with you"}
-                    </h3>
-
-                    {/* High-quality polaroid reveal */}
-                    <div className="bg-white p-3 pb-8 rounded-sm shadow-xl border border-slate-200/60 max-w-xs relative group">
-                      <div className="aspect-square w-64 h-64 bg-amber-50 overflow-hidden border border-slate-100 rounded-xs">
-                        {state.dearYouHeadlinePhoto ? (
-                          <img src={state.dearYouHeadlinePhoto} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-rose-100 to-indigo-100 text-[#4c0519]">
-                            <span className="text-4xl animate-pulse">🎉</span>
-                          </div>
-                        )}
-                      </div>
-                      <span className="absolute bottom-1 right-2 text-[8px] font-mono text-slate-300">#thereveal</span>
-                    </div>
-                  </motion.div>
-                )}
-
-                {dearYouStep === 6 && (
-                  <motion.div
-                    key="dy6"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="py-1 text-center flex flex-col items-center space-y-4"
-                  >
-                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Page 6: A Handwritten Note</span>
-                    
-                    {/* Notebook Paper layout */}
-                    <div className="w-full max-w-md bg-[#fffdf9] dark:bg-slate-950 p-6 md:p-8 rounded-2xl border border-dashed border-amber-300 dark:border-amber-900/50 shadow-md relative overflow-hidden text-left font-handwriting">
-                      {/* Notebook lines */}
-                      <div className="absolute top-0 bottom-0 left-8 w-[1px] bg-red-200/50" />
-                      
-                      <div className="pl-6 space-y-4">
-                        <span className="text-2xl">✍️</span>
-                        <p className="text-xs md:text-sm leading-loose whitespace-pre-wrap text-slate-800 dark:text-slate-350 italic">
-                          {state.dearYouNoteText || "Happy birthday to my favorite person. Grateful for every big adventure and every quiet walk we share. You deserve the entire world."}
-                        </p>
-                      </div>
-
-                      {/* Small accent photo nested inside paper */}
-                      {state.dearYouNotePhoto && (
-                        <div className="mt-4 flex justify-end">
-                          <div className="bg-white p-1 pb-3 rounded-xs border border-slate-200 shadow-sm rotate-[3deg] max-w-[80px]">
-                            <img src={state.dearYouNotePhoto} className="w-16 h-16 object-cover rounded-xs" referrerPolicy="no-referrer" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
-                {dearYouStep === 7 && (
-                  <motion.div
-                    key="dy7"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    className="py-6 text-center space-y-6"
-                  >
-                    <div className="text-5xl animate-bounce">💖</div>
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-bold tracking-widest text-amber-600 uppercase">forever and always</h3>
-                      <p className="text-md md:text-lg italic font-handwriting font-bold leading-relaxed text-[#4c0519] dark:text-amber-100 max-w-sm mx-auto">
-                        "{state.dearYouFinalMessage || "Here's to another trip around the sun, with me right beside you."}"
+                    {passcodeError ? (
+                      <p className="text-xs font-bold text-red-500 animate-pulse">
+                        Wrong passcode! Hint: check with the sender or try again.
                       </p>
-                    </div>
+                    ) : (
+                      <p className="text-[10px] text-slate-450 italic">
+                        Hint: Sender relationship is <span className="font-bold underline text-amber-700 dark:text-amber-400">{state.relationship || "friend"}</span>
+                      </p>
+                    )}
 
-                    <div className="pt-2 border-t border-dashed border-amber-200 dark:border-amber-900/20 max-w-xs mx-auto">
-                      <span className="text-[10px] text-slate-450 font-mono block">SIGNED WITH LOVE BY</span>
-                      <span className="text-lg font-black bg-clip-text text-[#4c0519] dark:text-amber-200 font-handwriting">
-                        {state.dearYouSenderName || "Sam"}
-                      </span>
-                    </div>
+                    {/* Hidden text input for typing on desktop/mobile */}
+                    <input
+                      type="text"
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={enteredPasscode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                        setEnteredPasscode(val);
+                        setPasscodeError(false);
+                        
+                        if (val.length === 4) {
+                          if (val === state.passcode) {
+                            synth.playSparkle();
+                            confetti({ particleCount: 50, spread: 60 });
+                            setPasscodeVerified(true);
+                            triggerOpenCard();
+                          } else {
+                            synth.playPop();
+                            setPasscodeError(true);
+                            setTimeout(() => {
+                              setEnteredPasscode("");
+                              setPasscodeError(false);
+                            }, 1200);
+                          }
+                        }
+                      }}
+                      className="w-full max-w-xs mx-auto border border-amber-300/60 p-2.5 rounded-xl text-center text-xs tracking-widest bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500"
+                      placeholder="Enter 4-digit code..."
+                      autoFocus
+                    />
 
                     <button
                       type="button"
                       onClick={() => {
-                        synth.playCheer();
-                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                        restartCelebrate();
+                        setEnvelopeTouched(false);
+                        setEnteredPasscode("");
+                        setPasscodeError(false);
                       }}
-                      style={{ backgroundColor: state.dearYouAccent || "#B33A2E" }}
-                      className="mx-auto px-6 py-3 text-white text-xs font-black tracking-widest uppercase rounded-full shadow-lg cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 border-0 font-sans"
+                      className="text-xs text-amber-700 dark:text-amber-400 hover:underline font-bold border-0 bg-transparent cursor-pointer block mx-auto mt-2"
                     >
-                      <span>Complete Story ♡</span>
+                      ← Back to Envelope
                     </button>
                   </motion.div>
-                )}
-              </AnimatePresence>
+                )
+              ) : (
+                /* SCRAPBOOK PAGES */
+                <>
+                  {dearYouStep === 1 && (
+                    <motion.div
+                      key="dy1"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="py-6 text-center space-y-6"
+                    >
+                      <div className="text-5xl animate-bounce">💌</div>
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-bold tracking-widest text-amber-600 uppercase">dear you...</h3>
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tight text-[#4c0519] dark:text-amber-100 font-handwriting">
+                          A Beautiful Birthday Story
+                        </h2>
+                        <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                          A cozy hand-crafted scrapbook has been made with so much love to celebrate another wonderful year of your life.
+                        </p>
+                      </div>
 
-              {/* Navigation controls */}
+                      <div className="p-4 bg-white/60 dark:bg-slate-950/40 rounded-2xl border border-dashed border-amber-200 dark:border-amber-900/30 inline-block">
+                        <span className="text-[10px] text-slate-450 block font-mono">RECIPIENT:</span>
+                        <span className="text-xl font-black text-[#4c0519] dark:text-amber-200 block font-handwriting">{state.recipientName}</span>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          synth.playSparkle();
+                          setDearYouStep(2);
+                        }}
+                        style={{ backgroundColor: state.dearYouAccent || "#B33A2E" }}
+                        className="mx-auto px-6 py-3 text-white text-xs font-black tracking-widest uppercase rounded-full shadow-lg hover:brightness-115 cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 border-0"
+                      >
+                        <span>Begin Story</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {dearYouStep === 2 && (
+                    <motion.div
+                      key="dy2"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="py-1 flex flex-col items-center space-y-4 text-center"
+                    >
+
+                      {/* Polaroid Frame */}
+                      <div className="bg-white p-3 pb-8 rounded-sm shadow-xl border border-slate-250/50 max-w-xs rotate-[-2deg] hover:rotate-0 transition-transform duration-300 relative group">
+                        <div className="absolute top-[-8px] left-1/2 transform -translate-x-1/2 w-16 h-4 bg-amber-200/50 border border-amber-300/20 rotate-[-1deg] rounded-sm flex items-center justify-center shadow-xs" />
+                        <div className="aspect-square w-60 h-60 bg-amber-50/50 overflow-hidden rounded-xs border border-slate-100">
+                          {state.dearYouFavoritePhoto ? (
+                            <img src={state.dearYouFavoritePhoto} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-pink-100 to-amber-100 text-[#4c0519]">
+                              <span className="text-4xl animate-float">🥰</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-4 font-handwriting text-[#4c0519] italic text-md text-center max-w-[220px] mx-auto min-h-[40px] flex items-center justify-center">
+                          "{state.dearYouFavoriteQuote || "the one who brightens every ordinary Tuesday with magic."}"
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {dearYouStep === 3 && (
+                    <motion.div
+                      key="dy3"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="py-1 flex flex-col items-center space-y-4"
+                    >
+                      <div className="text-center">
+<h3 className="text-2xl font-black mt-1 text-[#4c0519] dark:text-amber-100 font-handwriting">{state.dearYouMemoryCaption || "sweet chapters of us ♡"}</h3>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 w-full max-w-md mx-auto py-2">
+                        {[
+                          { key: "dearYouMem0", rotate: "rotate-[-3deg]", fallbackEmoji: "📸" },
+                          { key: "dearYouMem1", rotate: "rotate-[2deg]", fallbackEmoji: "☕" },
+                          { key: "dearYouMem2", rotate: "rotate-[1.5deg]", fallbackEmoji: "🎒" },
+                          { key: "dearYouMem3", rotate: "rotate-[-1.5deg]", fallbackEmoji: "🥐" }
+                        ].map((mem, idx) => {
+                          const imgUrl = (state as any)[mem.key];
+                          return (
+                            <div
+                              key={mem.key}
+                              className={`bg-white p-2 pb-5 rounded-xs border border-slate-200 shadow-md flex flex-col items-center relative group transition-transform hover:scale-105 hover:rotate-0 ${mem.rotate}`}
+                            >
+                              <div className="absolute top-[-6px] left-1/2 transform -translate-x-1/2 w-10 h-3 bg-amber-200/40 border border-amber-300/10 rotate-[-1deg]" />
+                              <div className="aspect-square w-full bg-slate-50/50 rounded-xs overflow-hidden border border-slate-100 flex items-center justify-center">
+                                {imgUrl ? (
+                                  <img src={imgUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                ) : (
+                                  <span className="text-2xl">{mem.fallbackEmoji}</span>
+                                )}
+                              </div>
+                              <span className="mt-1.5 text-[9px] font-mono font-bold text-slate-400">#memory0{idx + 1}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {dearYouStep === 4 && (
+                    <motion.div
+                      key="dy4"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="py-1 text-center flex flex-col items-center space-y-4"
+                    >
+<h3 className="text-xl font-extrabold text-[#4c0519] dark:text-amber-100">
+                        Blow out the candles! 🎂
+                      </h3>
+                      
+                      {/* Render customized cake */}
+                      <div className="relative scale-90 md:scale-95 my-4" onClick={() => !candlesBlown && triggerCandleBlow()}>
+                        {/* Candles list */}
+                        <div className="flex justify-center space-x-3 mb-[-12px] relative z-10">
+                          {Array.from({ length: Math.min(12, state.dearYouAge || 7) }).map((_, idx) => (
+                            <div key={idx} className="flex flex-col items-center relative">
+                              {/* Flame */}
+                              {!candlesBlown && (
+                                <motion.div
+                                  animate={{
+                                    scale: [1, 1.25, 1],
+                                    y: [0, -2, 0],
+                                  }}
+                                  transition={{
+                                    repeat: Infinity,
+                                    duration: 0.4 + idx * 0.05,
+                                    ease: "easeInOut",
+                                  }}
+                                  className="w-2.5 h-4 bg-gradient-to-t from-red-500 via-yellow-400 to-amber-100 rounded-full blur-[1px] absolute -top-4"
+                                />
+                              )}
+                              {/* Candle Body */}
+                              <div className={`w-2 h-8 bg-gradient-to-b from-amber-300 to-amber-500 border border-slate-900 rounded-sm ${candlesBlown ? "opacity-60" : ""}`} />
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Cake layers */}
+                        <div className="w-44 h-8 bg-pink-350 border border-slate-900 rounded-t-lg relative shadow-md">
+                          {/* Dripping frosting */}
+                          <div className="absolute -bottom-1.5 left-2 w-3 h-3 rounded-full bg-inherit" />
+                          <div className="absolute -bottom-2 left-10 w-4 h-4 rounded-full bg-inherit" />
+                          <div className="absolute -bottom-1.5 left-24 w-3 h-3 rounded-full bg-inherit" />
+                          <div className="absolute -bottom-2 left-32 w-3.5 h-4 rounded-full bg-inherit" />
+                        </div>
+                        <div className="w-52 h-16 bg-amber-100 border border-slate-900 rounded-b-lg relative z-[-1] overflow-hidden flex items-center justify-center font-bold text-xs uppercase tracking-wider text-slate-800/40 font-handwriting">
+                          Happy Birthday
+                        </div>
+                        {/* Plate */}
+                        <div className="w-56 h-2.5 bg-slate-350 border border-slate-900 rounded-full shadow-md mt-[-2px] mx-auto" />
+                      </div>
+
+                      <div className="mt-2 text-center">
+                        {candlesBlown ? (
+                          <div className="inline-flex items-center space-x-1.5 text-emerald-600 bg-emerald-50 px-4 py-1 rounded-full border border-emerald-200 text-xs font-bold">
+                            <Check className="w-4 h-4" />
+                            <span>Secret wish blown into the universe!</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => !candlesBlown && triggerCandleBlow()}
+                            className="text-xs bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-1.5 rounded-full shadow-sm animate-pulse cursor-pointer border-0"
+                          >
+                            Tap to Blow Out Candles
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {dearYouStep === 5 && (
+                    <motion.div
+                      key="dy5"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="py-1 flex flex-col items-center space-y-4 text-center"
+                    >
+<h3 className="text-2xl font-black text-[#4c0519] dark:text-amber-150 leading-tight font-handwriting">
+                        {state.dearYouHeadline || "a lifetime of happy moments with you"}
+                      </h3>
+
+                      {/* High-quality polaroid reveal */}
+                      <div className="bg-white p-3 pb-8 rounded-sm shadow-xl border border-slate-200/60 max-w-xs relative group">
+                        <div className="aspect-square w-64 h-64 bg-amber-50 overflow-hidden border border-slate-100 rounded-xs">
+                          {state.dearYouHeadlinePhoto ? (
+                            <img src={state.dearYouHeadlinePhoto} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-rose-100 to-indigo-100 text-[#4c0519]">
+                              <span className="text-4xl animate-pulse">🎉</span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="absolute bottom-1 right-2 text-[8px] font-mono text-slate-330">#thereveal</span>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {dearYouStep === 6 && (
+                    <motion.div
+                      key="dy6"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="py-1 text-center flex flex-col items-center space-y-4"
+                    >
+
+                      {/* Notebook Paper layout */}
+                      <div className="w-full max-w-md bg-[#fffdf9] dark:bg-slate-950 p-6 md:p-8 rounded-2xl border border-dashed border-amber-300 dark:border-amber-900/50 shadow-md relative overflow-hidden text-left font-handwriting">
+                        {/* Notebook lines */}
+                        <div className="absolute top-0 bottom-0 left-8 w-[1px] bg-red-200/50" />
+                        
+                        <div className="pl-6 space-y-4">
+                          <span className="text-2xl">✍️</span>
+                          <p className="text-xs md:text-sm leading-loose whitespace-pre-wrap text-slate-800 dark:text-slate-350 italic">
+                            {state.dearYouNoteText || "Happy birthday to my favorite person. Grateful for every big adventure and every quiet walk we share. You deserve the entire world."}
+                          </p>
+                        </div>
+
+                        {/* Small accent photo nested inside paper */}
+                        {state.dearYouNotePhoto && (
+                          <div className="mt-4 flex justify-end">
+                            <div className="bg-white p-1 pb-3 rounded-xs border border-slate-200 shadow-sm rotate-[3deg] max-w-[80px]">
+                              <img src={state.dearYouNotePhoto} className="w-16 h-16 object-cover rounded-xs" referrerPolicy="no-referrer" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {dearYouStep === 7 && (
+                    <motion.div
+                      key="dy7"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="py-6 text-center space-y-6"
+                    >
+                      <div className="text-5xl animate-bounce">💖</div>
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-bold tracking-widest text-amber-600 uppercase">forever and always</h3>
+                        <p className="text-md md:text-lg italic font-handwriting font-bold leading-relaxed text-[#4c0519] dark:text-amber-100 max-w-sm mx-auto">
+                          "{state.dearYouFinalMessage || "Here's to another trip around the sun, with me right beside you."}"
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-dashed border-amber-200 dark:border-amber-900/20 max-w-xs mx-auto">
+                        <span className="text-[10px] text-slate-450 font-mono block">SIGNED WITH LOVE BY</span>
+                        <span className="text-lg font-black bg-clip-text text-[#4c0519] dark:text-amber-200 font-handwriting">
+                          {state.dearYouSenderName || "Sam"}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          synth.playCheer();
+                          confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                          restartCelebrate();
+                        }}
+                        style={{ backgroundColor: state.dearYouAccent || "#B33A2E" }}
+                        className="mx-auto px-6 py-3 text-white text-xs font-black tracking-widest uppercase rounded-full shadow-lg cursor-pointer active:scale-95 transition-all flex items-center gap-1.5 border-0 font-sans"
+                      >
+                        <span>Complete Story ♡</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </>
+              )}
+            </AnimatePresence>
+
+            {/* Navigation controls */}
+            {envelopeOpened && (
               <div className="mt-8 pt-4 border-t border-dashed border-amber-200/50 flex items-center justify-between w-full">
                 <button
                   type="button"
@@ -1325,16 +1538,6 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                 >
                   ← Back
                 </button>
-
-                <div className="flex items-center space-x-1">
-                  {[1,2,3,4,5,6,7].map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      onClick={() => setDearYouStep(pageNum)}
-                      className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all ${dearYouStep === pageNum ? 'bg-amber-600 scale-120' : 'bg-slate-300'}`}
-                    />
-                  ))}
-                </div>
 
                 {dearYouStep < 7 ? (
                   <button
@@ -1363,45 +1566,156 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   </button>
                 )}
               </div>
-            </motion.div>
-          </div>
-        ) : state.isPinterestCard ? (
-          /* Render Pinterest Book */
-          <div className="max-w-2xl mx-auto px-4 py-8 md:py-16 flex flex-col justify-center min-h-screen relative z-20 font-space selection:bg-rose-100 selection:text-rose-900">
-            {/* Cute top floating pastel sparkles decoration */}
-            <div className="absolute top-10 left-10 text-xl opacity-40 animate-float">🌸</div>
-            <div className="absolute top-20 right-12 text-2xl opacity-40 animate-float delay-1000">🧸</div>
-            <div className="absolute bottom-16 left-16 text-lg opacity-40 animate-float delay-2000">🧁</div>
+            )}
+          </motion.div>
+        </div>
+      ) : state.isPinterestCard ? (
+        /* Render Pinterest Book */
+        <div className="max-w-2xl mx-auto px-4 py-8 md:py-16 flex flex-col justify-center min-h-screen relative z-20 font-space selection:bg-rose-100 selection:text-rose-900">
+          {/* Cute top floating pastel sparkles decoration */}
+          <div className="absolute top-10 left-10 text-xl opacity-40 animate-float">🌸</div>
+          <div className="absolute top-20 right-12 text-2xl opacity-40 animate-float delay-1000">🧸</div>
+          <div className="absolute bottom-16 left-16 text-lg opacity-40 animate-float delay-2000">🧁</div>
 
-            {/* Top Persistent Progress Indicator & Clickable Navigation Tabs */}
-            <div className="mb-6 flex flex-wrap items-center justify-center gap-1.5 md:gap-2.5 max-w-xl mx-auto text-[10px] md:text-xs font-bold tracking-widest uppercase select-none font-sans bg-rose-50/80 dark:bg-slate-900/60 p-2 rounded-2xl border border-rose-100 dark:border-rose-900/30 shadow-xs relative z-30">
-              {[1, 2, 3, 4, 5].map((pageNum) => (
-                <button
-                  key={pageNum}
-                  type="button"
-                  onClick={() => {
-                    synth.playSparkle();
-                    setPinterestPage(pageNum);
-                  }}
-                  className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                    pinterestPage === pageNum
-                      ? "bg-[#ec4899] text-white font-black shadow-xs animate-pulse-gentle"
-                      : "text-rose-600 dark:text-rose-400 hover:bg-rose-100/50 font-semibold"
-                  }`}
-                >
-                  Page {pageNum}
-                </button>
-              ))}
-            </div>
+          {/* Main Polaroid Deck */}
+          <motion.div 
+            initial={{ scale: 0.98, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gradient-to-tr from-[#fff1f3] via-[#faf6fe] to-[#f0f9ff] text-pink-950 rounded-[32px] border-4 border-[#4c0519] shadow-[10px_10px_0px_#4c0519] p-6 md:p-10 relative overflow-hidden flex flex-col justify-between min-h-[550px] md:min-h-[580px]"
+          >
+            <AnimatePresence mode="wait">
+              {!envelopeOpened && !envelopeTouched && (
+                /* Step 1: Closed Envelope inside Pinterest */
+                <motion.div
+                    key="pinterest-envelope-closed"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    onClick={() => {
+                      synth.playSparkle();
+                      if (state.passcode && state.passcode.length === 4) {
+                        setEnvelopeTouched(true);
+                      } else {
+                        triggerOpenCard();
+                      }
+                    }}
+                    className="cursor-pointer group flex flex-col items-center py-8 space-y-6 text-center"
+                  >
+                    <CartoonEnvelope
+                      recipientName={state.recipientName || "Bestie"}
+                      isProtected={!!(state.passcode && state.passcode.length === 4)}
+                    />
+                    <div className="space-y-3">
+                      <h2 className="text-3xl font-bold font-serif text-rose-600/90 tracking-tight leading-none lowercase">
+                        {state.recipientName}'s Surprise Card
+                      </h2>
+                      <p className="text-slate-650 font-light text-xs max-w-sm mx-auto lowercase font-sans">
+                        A cozy pinterest-style scrapbook created with love. Tap the envelope to open it!
+                      </p>
+                      <div className="inline-block px-3 py-1 bg-rose-50 border border-rose-100 rounded-full text-[10px] text-rose-700 font-mono font-bold uppercase">
+                        From: {state.relationship ? `Your ${state.relationship}` : "Someone Special"}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
-            {/* Main Polaroid Deck */}
-            <motion.div 
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-gradient-to-tr from-[#fff1f3] via-[#faf6fe] to-[#f0f9ff] text-pink-950 rounded-[32px] border-4 border-[#4c0519] shadow-[10px_10px_0px_#4c0519] p-6 md:p-10 relative overflow-hidden flex flex-col justify-between min-h-[550px] md:min-h-[580px]"
-            >
-              <AnimatePresence mode="wait">
-                {pinterestPage === 1 && (
+              {!envelopeOpened && envelopeTouched && (
+                /* Step 2: Passcode Entry inside Pinterest */
+                <motion.div
+                    key="pinterest-passcode-entry"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    className="space-y-6 py-6 text-center flex flex-col items-center"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-full bg-rose-500/10 border-2 border-rose-500/35 flex items-center justify-center text-rose-500 mb-3">
+                        <Lock className="w-5 h-5" />
+                      </div>
+                      <h2 className="text-2xl font-bold font-serif text-rose-600/90 tracking-tight lowercase">Unlock Card</h2>
+                      <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto lowercase font-sans">
+                        Please enter the 4-digit passcode to unlock your birthday card.
+                      </p>
+                    </div>
+
+                    <div className="flex justify-center gap-3 my-4">
+                      {Array.from({ length: 4 }).map((_, idx) => {
+                        const char = enteredPasscode[idx] || "";
+                        return (
+                          <div
+                            key={idx}
+                            className={`w-12 h-14 rounded-2xl border-2 flex items-center justify-center text-xl font-bold font-mono transition-all duration-300 ${
+                              passcodeError
+                                ? "border-red-500 bg-red-50 text-red-500 animate-shake"
+                                : char
+                                ? "border-rose-450 bg-rose-50 text-rose-500"
+                                : "border-slate-200 bg-slate-50 text-slate-400"
+                            }`}
+                          >
+                            {char ? "•" : ""}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {passcodeError ? (
+                      <p className="text-xs font-bold text-red-500 animate-pulse">
+                        Wrong passcode! Hint: check with the sender or try again.
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-slate-450 italic lowercase">
+                        Hint: Sender relationship is <span className="font-bold underline text-rose-700">{state.relationship || "friend"}</span>
+                      </p>
+                    )}
+
+                    {/* Hidden text input for typing on desktop/mobile */}
+                    <input
+                      type="text"
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={enteredPasscode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                        setEnteredPasscode(val);
+                        setPasscodeError(false);
+                        
+                        if (val.length === 4) {
+                          if (val === state.passcode) {
+                            synth.playSparkle();
+                            confetti({ particleCount: 50, spread: 60 });
+                            setPasscodeVerified(true);
+                            triggerOpenCard();
+                          } else {
+                            synth.playPop();
+                            setPasscodeError(true);
+                            setTimeout(() => {
+                              setEnteredPasscode("");
+                              setPasscodeError(false);
+                            }, 1200);
+                          }
+                        }
+                      }}
+                      className="w-full max-w-xs mx-auto border border-rose-300/60 p-2.5 rounded-xl text-center text-xs tracking-widest bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-rose-500"
+                      placeholder="Enter 4-digit code..."
+                      autoFocus
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEnvelopeTouched(false);
+                        setEnteredPasscode("");
+                        setPasscodeError(false);
+                      }}
+                      className="text-xs text-rose-700 hover:underline font-bold border-0 bg-transparent cursor-pointer block mx-auto mt-2"
+                    >
+                      ← Back to Envelope
+                    </button>
+                  </motion.div>
+                )}
+
+              {envelopeOpened && pinterestPage === 1 && (
                   <motion.div
                     key="p1"
                     initial={{ x: 20, opacity: 0 }}
@@ -1793,69 +2107,60 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                 )}
               </AnimatePresence>
 
-              {/* CARD DECK PAGINATION CONTROLS */}
-              <div className="mt-8 pt-4 border-t border-[#4c0519]/10 flex items-center justify-between w-full">
+          {/* CARD DECK PAGINATION CONTROLS */}
+          {envelopeOpened && (
+            <div className="mt-8 pt-4 border-t border-[#4c0519]/10 flex items-center justify-between w-full">
+              <button
+                type="button"
+                disabled={pinterestPage === 1}
+                onClick={() => setPinterestPage(p => Math.max(1, p - 1))}
+                className="px-3.5 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 rounded-lg font-bold border border-rose-100 disabled:opacity-40 cursor-pointer"
+              >
+                ← Back
+              </button>
+
+              {pinterestPage < 5 ? (
                 <button
                   type="button"
-                  disabled={pinterestPage === 1}
-                  onClick={() => setPinterestPage(p => Math.max(1, p - 1))}
-                  className="px-3.5 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 rounded-lg font-bold border border-rose-100 disabled:opacity-40 cursor-pointer"
+                  onClick={() => {
+                    synth.playSparkle();
+                    setPinterestPage(p => p + 1);
+                  }}
+                  className="px-3.5 py-1.5 text-xs text-white bg-rose-500 hover:bg-rose-600 rounded-lg font-bold shadow-xs flex items-center space-x-1 cursor-pointer"
                 >
-                  ← Back
+                  <span>Next</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
-
-                {/* Page dots indicator */}
-                <div className="flex items-center space-x-1.5 select-none">
-                  {[1,2,3,4,5].map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      onClick={() => setPinterestPage(pageNum)}
-                      className={`w-2 h-2 rounded-full cursor-pointer transition-all ${pinterestPage === pageNum ? 'bg-rose-500 scale-120' : 'bg-slate-300/60'}`}
-                    />
-                  ))}
-                </div>
-
-                {pinterestPage < 5 ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      synth.playSparkle();
-                      setPinterestPage(p => p + 1);
-                    }}
-                    className="px-3.5 py-1.5 text-xs text-white bg-rose-500 hover:bg-rose-600 rounded-lg font-bold shadow-xs flex items-center space-x-1 cursor-pointer"
-                  >
-                    <span>Next</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      synth.playCheer();
-                      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                      restartCelebrate();
-                    }}
-                    className="px-3.5 py-1.5 text-xs text-white bg-slate-900 hover:bg-slate-800 rounded-lg font-bold flex items-center space-x-1 cursor-pointer shadow-md"
-                  >
-                    <span>Finish! ♡</span>
-                  </button>
-                )}
-              </div>
-            </motion.div>
-
-            {/* RETRY / RESET CELEBRATION CONTROL */}
-            {pinterestPage === 5 && (
-              <div className="text-center mt-6">
+              ) : (
                 <button
-                  onClick={restartCelebrate}
-                  className="rounded-full px-5 py-2 text-xs flex items-center space-x-2 mx-auto justify-center bg-white hover:bg-slate-50 border border-rose-100 text-rose-600 font-bold shadow-sm cursor-pointer transition-transform active:scale-95"
+                  type="button"
+                  onClick={() => {
+                    synth.playCheer();
+                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                    restartCelebrate();
+                  }}
+                  className="px-3.5 py-1.5 text-xs text-white bg-slate-900 hover:bg-slate-800 rounded-lg font-bold flex items-center space-x-1 cursor-pointer shadow-md"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>{isInteractivePreview ? "Reset Interactive Preview" : "Play Surprises Again"}</span>
+                  <span>Finish! ♡</span>
                 </button>
-              </div>
-            )}
+              )}
+            </div>
+          )}
+        </motion.div>
+
+        {/* RETRY / RESET CELEBRATION CONTROL */}
+        {envelopeOpened && pinterestPage === 5 && (
+          <div className="text-center mt-6">
+            <button
+              onClick={restartCelebrate}
+              className="rounded-full px-5 py-2 text-xs flex items-center space-x-2 mx-auto justify-center bg-white hover:bg-slate-50 border border-rose-100 text-rose-600 font-bold shadow-sm cursor-pointer transition-transform active:scale-95"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>{isInteractivePreview ? "Reset Interactive Preview" : "Play Surprises Again"}</span>
+            </button>
           </div>
+        )}
+      </div>
         ) : (
           /* MAIN CARDS CONTENT CONTAINER FOR STANDARD QUESTS */
           <div className="max-w-2xl mx-auto px-4 py-16 flex flex-col justify-center min-h-screen relative z-20">
@@ -2011,7 +2316,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
             </div>
           </div>
         )
-      )}
+      }
 
       {/* Hidden Audio element for custom background MP3 soundtrack files */}
       {state.uploadedMusic && (

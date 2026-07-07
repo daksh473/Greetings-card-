@@ -63,6 +63,11 @@ export interface BirthdayCardState {
   dearYouFinalMessage?: string;
   dearYouSenderName?: string;
   dearYouAccent?: string;
+
+  // Custom Background Customization
+  customBgType?: "color" | "image" | "video";
+  customBgUrl?: string; // base64 or direct URL
+  customBgOpacity?: number; // 0 to 100 for overlay opacity
 }
 
 export interface SuggestionParams {
