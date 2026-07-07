@@ -46,6 +46,7 @@ export interface BirthdayCardState {
   uploadedMusicName?: string; // custom title of the uploaded file
   passcode?: string; // 4-digit passcode gate for recipient
   passcodeBgUrl?: string; // custom background image URL/base64 for passcode lock screen
+  passcodeTextColor?: string; // custom text color for passcode lock screen (e.g. hex color)
   
   // Custom Dear You card fields
   isDearYou?: boolean;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { BirthdayCardState } from "../types";
 import { synth } from "../utils/audio";
 import { AVATAR_OPTIONS } from "../utils/sharing";
-import { Gift, Volume2, VolumeX, Sparkles, RefreshCw, Flame, Check, HelpCircle, Heart, Star, ArrowRight, Lock, Unlock, Image as ImageIcon, Upload, X } from "lucide-react";
+import { Gift, Volume2, VolumeX, Sparkles, RefreshCw, Flame, Check, HelpCircle, Heart, Star, ArrowRight, Lock, Unlock, Image as ImageIcon, Upload, X, Palette } from "lucide-react";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -241,12 +241,24 @@ const bookFlipVariants = {
 };
 
 const PRESET_WALLPAPERS = [
+  { name: "Solid Velvet Black", url: "solid-black" },
   { name: "Starry Night", url: "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=1200" },
   { name: "Midnight Aurora", url: "https://images.unsplash.com/photo-1579033461380-adb47c3eb938?auto=format&fit=crop&q=80&w=1200" },
   { name: "Cyberpunk Neon", url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&q=80&w=1200" },
   { name: "Mystic Purple", url: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=1200" },
   { name: "Velvet Rose Dusk", url: "https://images.unsplash.com/photo-1516339901601-2e1d62dc0c45?auto=format&fit=crop&q=80&w=1200" },
   { name: "Minimal Obsidian", url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200" }
+];
+
+const PRESET_TEXT_COLORS = [
+  { name: "Crisp White", value: "#ffffff" },
+  { name: "Creamy Vanilla", value: "#fef3c7" },
+  { name: "Soft Pink", value: "#f472b6" },
+  { name: "Golden Amber", value: "#fbbf24" },
+  { name: "Minty Fresh", value: "#34d399" },
+  { name: "Neon Cyan", value: "#22d3ee" },
+  { name: "Sunset Orange", value: "#fb923c" },
+  { name: "Lilac Lavender", value: "#c084fc" },
 ];
 
 export default function BirthdayCardViewer({ state, isInteractivePreview = false, onResetPreview }: BirthdayCardViewerProps) {
@@ -268,7 +280,8 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
   const [passcodeError, setPasscodeError] = useState(false);
 
   // Dynamic wallpaper states
-  const [passcodeBg, setPasscodeBg] = useState(state.passcodeBgUrl || "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=1200");
+  const [passcodeBg, setPasscodeBg] = useState(state.passcodeBgUrl || "solid-black");
+  const [passcodeTextColor, setPasscodeTextColor] = useState(state.passcodeTextColor || "#ffffff");
   const [showWallpaperMenu, setShowWallpaperMenu] = useState(false);
 
   useEffect(() => {
@@ -277,19 +290,67 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     }
   }, [state.passcodeBgUrl]);
 
+  useEffect(() => {
+    if (state.passcodeTextColor) {
+      setPasscodeTextColor(state.passcodeTextColor);
+    }
+  }, [state.passcodeTextColor]);
+
   const updatePasscodeBgInDb = async (newUrl: string) => {
+    const params = new URLSearchParams(window.location.search);
+    const shortId = params.get("c") || params.get("id");
+    if (!shortId) return;
+
+    // 1. Update Firebase Firestore
     try {
-      const params = new URLSearchParams(window.location.search);
-      const shortId = params.get("c") || params.get("id");
-      if (shortId) {
-        const { doc, setDoc } = await import("firebase/firestore");
-        const { db } = await import("../lib/firebase");
-        const docRef = doc(db, "cards", shortId);
-        await setDoc(docRef, { passcodeBgUrl: newUrl }, { merge: true });
-        console.log("DB update success");
-      }
+      const { doc, setDoc } = await import("firebase/firestore");
+      const { db } = await import("../lib/firebase");
+      const docRef = doc(db, "cards", shortId);
+      await setDoc(docRef, { passcodeBgUrl: newUrl }, { merge: true });
+      console.log("Firestore wallpaper update success");
     } catch (err) {
-      console.warn("DB update failed:", err);
+      console.warn("Firestore update failed, trying backend fallback...", err);
+    }
+
+    // 2. Update local server
+    try {
+      await fetch(`/api/cards/${shortId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcodeBgUrl: newUrl })
+      });
+      console.log("Local server wallpaper update success");
+    } catch (err) {
+      console.warn("Local server update failed:", err);
+    }
+  };
+
+  const updatePasscodeTextColorInDb = async (newColor: string) => {
+    const params = new URLSearchParams(window.location.search);
+    const shortId = params.get("c") || params.get("id");
+    if (!shortId) return;
+
+    // 1. Update Firebase Firestore
+    try {
+      const { doc, setDoc } = await import("firebase/firestore");
+      const { db } = await import("../lib/firebase");
+      const docRef = doc(db, "cards", shortId);
+      await setDoc(docRef, { passcodeTextColor: newColor }, { merge: true });
+      console.log("Firestore text color update success");
+    } catch (err) {
+      console.warn("Firestore update failed, trying backend fallback...", err);
+    }
+
+    // 2. Update local server
+    try {
+      await fetch(`/api/cards/${shortId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcodeTextColor: newColor })
+      });
+      console.log("Local server text color update success");
+    } catch (err) {
+      console.warn("Local server update failed:", err);
     }
   };
 
@@ -362,40 +423,49 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
   }, [envelopeOpened, envelopeTouched, passcodeVerified, enteredPasscode, passcodeError]);
 
   const renderLockScreen = () => {
+    const isSolidBlack = passcodeBg === "solid-black" || !passcodeBg || (!passcodeBg.startsWith("http") && !passcodeBg.startsWith("data:"));
+
     return (
       <motion.div
         key="lock-screen-immersive"
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
-        style={{ 
+        style={isSolidBlack ? {
+          backgroundColor: "#000000",
+          color: passcodeTextColor
+        } : { 
           backgroundImage: `url(${passcodeBg})`,
           backgroundSize: "cover",
-          backgroundPosition: "center"
+          backgroundPosition: "center",
+          color: passcodeTextColor
         }}
-        className="absolute inset-0 w-full h-full flex flex-col justify-between p-6 text-white font-sans overflow-hidden select-none z-30"
+        className="absolute inset-0 w-full h-full flex flex-col justify-between p-6 font-sans overflow-hidden select-none z-30"
       >
-        {/* Dark blur overlay for wallpaper readability */}
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-0 rounded-[28px]" />
+        {/* Subtle overlay over image for text readability */}
+        {!isSolidBlack && (
+          <div className="absolute inset-0 bg-black/65 backdrop-blur-[3px] z-0 rounded-[28px]" />
+        )}
 
-        {/* Change Wallpaper Widget Button */}
+        {/* Customize Button - Prominent Glassmorphic Widget */}
         <div className="absolute top-4 right-4 z-40">
           <button
             type="button"
             onClick={() => setShowWallpaperMenu(!showWallpaperMenu)}
-            className="bg-black/50 hover:bg-black/80 border border-white/25 text-white p-2 rounded-full transition-all cursor-pointer flex items-center justify-center shadow-lg active:scale-90"
-            title="Change Wallpaper"
+            className="bg-black/45 hover:bg-black/75 border border-white/20 hover:border-white/45 text-white/95 hover:text-white px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-lg active:scale-95"
+            title="Customize Lock Screen Appearance"
           >
-            <ImageIcon className="w-4 h-4" />
+            <Palette className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+            <span className="font-semibold tracking-wide">Customize Screen</span>
           </button>
         </div>
 
-        {/* Custom Glassmorphic Wallpaper Control Menu */}
+        {/* Custom Glassmorphic Customize Control Menu */}
         {showWallpaperMenu && (
-          <div className="absolute inset-x-4 top-16 bg-slate-950/95 backdrop-blur-lg border border-white/10 rounded-2xl p-4 z-50 shadow-2xl animate-fade-in text-left text-white">
+          <div className="absolute inset-x-4 top-16 bg-slate-950/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 z-50 shadow-2xl animate-fade-in text-left text-white max-h-[75%] overflow-y-auto">
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
               <span className="text-xs font-bold text-white/95 tracking-wide flex items-center gap-1.5">
-                🌌 Lock Screen Wallpaper
+                🎨 Customize Lock Screen
               </span>
               <button 
                 onClick={() => setShowWallpaperMenu(false)}
@@ -406,10 +476,10 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
             </div>
 
             <div className="space-y-4">
-              {/* Presets */}
+              {/* Wallpaper Presets */}
               <div>
-                <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider mb-2">Preset Wallpapers</span>
-                <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-white/10">
+                <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider mb-2">🌌 Preset Wallpapers</span>
+                <div className="grid grid-cols-4 gap-2">
                   {PRESET_WALLPAPERS.map((wp) => (
                     <button
                       key={wp.name}
@@ -418,12 +488,21 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                         setPasscodeBg(wp.url);
                         await updatePasscodeBgInDb(wp.url);
                       }}
-                      className={`w-11 h-11 rounded-xl relative overflow-hidden flex-shrink-0 border-2 transition-all cursor-pointer active:scale-95 ${
+                      className={`h-14 rounded-xl relative overflow-hidden border-2 transition-all cursor-pointer active:scale-95 ${
                         passcodeBg === wp.url ? "border-pink-500 scale-105 shadow-md" : "border-transparent opacity-75 hover:opacity-100"
                       }`}
                       title={wp.name}
                     >
-                      <img src={wp.url} alt={wp.name} className="w-full h-full object-cover" />
+                      {wp.url === "solid-black" ? (
+                        <div className="w-full h-full bg-black flex items-center justify-center text-[8px] font-mono font-bold text-white/40">
+                          black
+                        </div>
+                      ) : (
+                        <img src={wp.url} alt={wp.name} className="w-full h-full object-cover" />
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-black/60 text-[8px] text-center text-white/80 py-0.5 truncate px-1">
+                        {wp.name.split(" ")[0]}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -435,7 +514,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                 <input
                   type="text"
                   placeholder="Paste direct image link..."
-                  value={passcodeBg.startsWith("data:") ? "" : passcodeBg}
+                  value={passcodeBg === "solid-black" || passcodeBg.startsWith("data:") ? "" : passcodeBg}
                   onChange={async (e) => {
                     const val = e.target.value.trim();
                     if (val) {
@@ -449,7 +528,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
 
               {/* Local File Upload */}
               <div className="space-y-1">
-                <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider">Or upload from your device</span>
+                <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider font-sans">Or upload from your device</span>
                 <label className="flex items-center justify-center gap-2 border border-dashed border-white/20 hover:border-white/40 rounded-xl py-2.5 cursor-pointer transition-colors bg-white/5 hover:bg-white/10 text-xs">
                   <Upload className="w-3.5 h-3.5 text-white/60" />
                   <span className="text-white/80 font-medium">Choose image file</span>
@@ -461,45 +540,103 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   />
                 </label>
               </div>
+
+              {/* Text Color Section */}
+              <div className="pt-3 border-t border-white/10 space-y-3">
+                <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider flex items-center gap-1.5">
+                  🎨 Customize Text Color
+                </span>
+                <div className="flex flex-wrap gap-2.5">
+                  {PRESET_TEXT_COLORS.map((tc) => (
+                    <button
+                      key={tc.name}
+                      type="button"
+                      onClick={async () => {
+                        setPasscodeTextColor(tc.value);
+                        await updatePasscodeTextColorInDb(tc.value);
+                      }}
+                      className="w-7 h-7 rounded-full border-2 transition-all cursor-pointer relative active:scale-90 flex items-center justify-center"
+                      style={{ 
+                        backgroundColor: tc.value,
+                        borderColor: passcodeTextColor.toLowerCase() === tc.value.toLowerCase() ? '#ec4899' : 'rgba(255,255,255,0.2)'
+                      }}
+                      title={tc.name}
+                    >
+                      {passcodeTextColor.toLowerCase() === tc.value.toLowerCase() && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-950" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Custom Hex Input */}
+                <div className="space-y-1">
+                  <span className="block text-[10px] text-white/50 uppercase font-bold tracking-wider">Custom Hex Text Color</span>
+                  <div className="flex gap-2">
+                    <div 
+                      className="w-8 h-8 rounded-lg border border-white/20 flex-shrink-0"
+                      style={{ backgroundColor: passcodeTextColor }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="#ffffff"
+                      value={passcodeTextColor}
+                      onChange={async (e) => {
+                        const val = e.target.value.trim();
+                        setPasscodeTextColor(val);
+                        if (/^#[0-9A-Fa-f]{6}$/.test(val) || /^#[0-9A-Fa-f]{3}$/.test(val)) {
+                          await updatePasscodeTextColorInDb(val);
+                        }
+                      }}
+                      className="flex-grow bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-pink-500 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Content Centering Area */}
-        <div className="relative z-10 flex flex-col items-center h-full justify-between py-6">
+        <div className="relative z-10 flex flex-col items-center h-full justify-between py-10">
           {/* Lock Screen Header */}
-          <div className="text-center mt-6 flex flex-col items-center">
+          <div className="text-center mt-8 flex flex-col items-center">
             {/* Elegant Small Lock Icon */}
-            <div className="mb-2 text-white/60 animate-pulse">
+            <div className="mb-3 animate-pulse" style={{ color: passcodeTextColor, opacity: 0.5 }}>
               <Lock className="w-4 h-4" />
             </div>
             
-            <p className="text-md font-light tracking-widest text-white/95 font-sans">
+            <h1 className="text-2xl font-light tracking-wide font-sans" style={{ color: passcodeTextColor, opacity: 0.9 }}>
               Enter password
-            </p>
+            </h1>
             
-            {/* Dynamic Dot Indicators */}
+            {/* Dynamic Hollow/Solid Dot Indicators */}
             <div className="flex justify-center gap-4 mt-6">
               {Array.from({ length: 4 }).map((_, idx) => {
                 const isFilled = enteredPasscode.length > idx;
                 return (
                   <div
                     key={idx}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    className={`w-3.5 h-3.5 rounded-full transition-all duration-200 ${
                       passcodeError
-                        ? "bg-red-500 animate-shake border border-red-400"
-                        : isFilled
-                        ? "bg-white scale-110 shadow-[0_0_10px_rgba(255,255,255,0.9)]"
-                        : "border border-white/40 bg-transparent"
+                        ? "bg-red-500 border border-red-400 animate-shake"
+                        : ""
                     }`}
+                    style={
+                      passcodeError 
+                        ? {} 
+                        : isFilled 
+                        ? { backgroundColor: passcodeTextColor, boxShadow: `0 0 12px ${passcodeTextColor}` } 
+                        : { border: `2px solid ${passcodeTextColor}`, opacity: 0.35, backgroundColor: "transparent" }
+                    }
                   />
                 );
               })}
             </div>
           </div>
 
-          {/* Elegant Circular Keypad Grid */}
-          <div className="grid grid-cols-3 gap-x-6 gap-y-4 max-w-[240px] mx-auto my-auto relative z-10">
+          {/* Elegant Circular Keypad Grid - matching Android/iOS style exactly */}
+          <div className="grid grid-cols-3 gap-x-8 gap-y-5 max-w-[260px] mx-auto my-auto relative z-10">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => {
               const letters = 
                 num === 2 ? "ABC" :
@@ -515,13 +652,17 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   key={num}
                   type="button"
                   onClick={() => handleKeypadPress(num)}
-                  className="w-16 h-16 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all duration-100 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-16 h-16 sm:w-18 sm:h-18 rounded-full border bg-transparent hover:bg-white/5 active:bg-white/15 transition-all duration-100 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus:ring-2 focus:ring-white/10"
+                  style={{ borderColor: `${passcodeTextColor}25` }}
                 >
-                  <span className="text-2xl font-light text-white leading-none">{num}</span>
-                  {letters && (
-                    <span className="text-[8px] font-bold text-white/40 tracking-widest leading-none mt-0.5 uppercase">
+                  <span className="text-3xl font-light leading-none" style={{ color: passcodeTextColor }}>{num}</span>
+                  {letters ? (
+                    <span className="text-[8px] font-bold tracking-wider leading-none mt-0.5 uppercase" style={{ color: passcodeTextColor, opacity: 0.4 }}>
                       {letters}
                     </span>
+                  ) : (
+                    // Spacing placeholder to align numbers perfectly
+                    <span className="h-2" />
                   )}
                 </button>
               );
@@ -531,7 +672,8 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
             <button
               type="button"
               onClick={() => handleKeypadPress("cancel")}
-              className="w-16 h-16 rounded-full flex items-center justify-center text-xs text-white/70 hover:text-white cursor-pointer select-none active:scale-95 transition-all outline-none"
+              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-sm cursor-pointer select-none active:scale-90 transition-all outline-none"
+              style={{ color: passcodeTextColor, opacity: 0.6 }}
             >
               Cancel
             </button>
@@ -539,29 +681,31 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
             <button
               type="button"
               onClick={() => handleKeypadPress(0)}
-              className="w-16 h-16 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all duration-100 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus:ring-1 focus:ring-white/20"
+              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full border bg-transparent hover:bg-white/5 active:bg-white/15 transition-all duration-100 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus:ring-2 focus:ring-white/10"
+              style={{ borderColor: `${passcodeTextColor}25` }}
             >
-              <span className="text-2xl font-light text-white leading-none">0</span>
+              <span className="text-3xl font-light leading-none" style={{ color: passcodeTextColor }}>0</span>
             </button>
             
             <button
               type="button"
               onClick={() => handleKeypadPress("delete")}
-              className="w-16 h-16 rounded-full flex items-center justify-center text-xs text-white/70 hover:text-white cursor-pointer select-none active:scale-95 transition-all outline-none"
+              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-sm cursor-pointer select-none active:scale-90 transition-all outline-none"
+              style={{ color: passcodeTextColor, opacity: 0.6 }}
             >
               Delete
             </button>
           </div>
 
           {/* Hint / Footer area */}
-          <div className="text-center mb-2 px-4">
+          <div className="text-center mb-4 px-4 min-h-[32px]">
             {passcodeError ? (
               <p className="text-xs font-bold text-red-400 animate-pulse">
                 Incorrect Passcode! Please try again.
               </p>
             ) : (
-              <p className="text-xs text-white/50 tracking-wide leading-relaxed">
-                Hint: Relationship is <span className="font-bold underline text-white/85 decoration-dotted">{state.relationship || "friend"}</span>
+              <p className="text-xs tracking-wide leading-relaxed" style={{ color: passcodeTextColor, opacity: 0.45 }}>
+                Hint: Relationship is <span className="font-bold underline decoration-dotted" style={{ color: passcodeTextColor, opacity: 0.85 }}>{state.relationship || "friend"}</span>
               </p>
             )}
           </div>

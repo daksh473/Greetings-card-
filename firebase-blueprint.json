@@ -17,7 +17,10 @@
         "giftClue": { "type": "string" },
         "shortQuote": { "type": "string" },
         "cakeType": { "type": "string" },
-        "interests": { "type": "string" }
+        "interests": { "type": "string" },
+        "passcode": { "type": "string" },
+        "passcodeBgUrl": { "type": "string" },
+        "passcodeTextColor": { "type": "string" }
       },
       "required": ["recipientName"]
     }

@@ -11,7 +11,8 @@ service cloud.firestore {
         && cardId.size() <= 128
         && request.resource.data.recipientName != null
         && request.resource.data.recipientName is string;
-      allow update, delete: if false; // Cards are immutable once shared
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['passcodeBgUrl', 'passcodeTextColor']);
+      allow delete: if false;
     }
   }
 }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { BirthdayCardState, SuggestionParams, BirthdayTheme, MusicChoice, InteractiveChallenge, CakeType } from "../types";
 import { encodeCardState, AVATAR_OPTIONS } from "../utils/sharing";
-import { Sparkles, Gift, Music, Copy, Share2, ExternalLink, RefreshCw, Check, AlertCircle, Heart, Star, Send, Trash2, Upload } from "lucide-react";
+import { Sparkles, Gift, Music, Copy, Share2, ExternalLink, RefreshCw, Check, AlertCircle, Heart, Star, Send, Trash2, Upload, Lock, Palette, Image as ImageIcon } from "lucide-react";
 import BirthdayCardViewer from "./BirthdayCardViewer";
 
 export default function BirthdayCardCreator() {
@@ -649,24 +649,120 @@ export default function BirthdayCardCreator() {
             </div>
 
             {/* SECURITY GATE SETTING */}
-            <div className="bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 p-3.5 rounded-2xl">
-              <label className="block text-xs font-bold text-rose-600 dark:text-rose-400 mb-1.5 uppercase tracking-wide font-mono flex items-center gap-1.5">
-                🔐 4-Digit Security Passcode
-              </label>
-              <input
-                type="text"
-                maxLength={4}
-                placeholder="e.g. 1234 (Default: 1234)"
-                value={formState.passcode || ""}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                  setFormState({ ...formState, passcode: val });
-                }}
-                className="w-full md:w-64 border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-sm font-mono tracking-widest focus:ring-2 focus:ring-rose-500 outline-none"
-              />
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-                If provided, the recipient must enter this 4-digit code on an aesthetic keypad gate to unlock their digital scrapbook greeting card!
-              </p>
+            <div className="bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 p-3.5 rounded-2xl space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-rose-600 dark:text-rose-400 mb-1.5 uppercase tracking-wide font-mono flex items-center gap-1.5">
+                  🔐 4-Digit Security Passcode
+                </label>
+                <input
+                  type="text"
+                  maxLength={4}
+                  placeholder="e.g. 1234 (Default: 1234)"
+                  value={formState.passcode || ""}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                    setFormState({ ...formState, passcode: val });
+                  }}
+                  className="w-full md:w-64 border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 p-2.5 rounded-xl text-slate-800 dark:text-white text-sm font-mono tracking-widest focus:ring-2 focus:ring-rose-500 outline-none"
+                />
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                  If provided, the recipient must enter this 4-digit code on an aesthetic keypad gate to unlock their digital scrapbook greeting card!
+                </p>
+              </div>
+
+              {/* Lock Screen Wallpaper Customizer inside Creator */}
+              <div className="pt-3 border-t border-rose-100 dark:border-rose-900/30 space-y-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-pink-500" />
+                  <span>Lock Screen Background URL</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Paste direct image link (or leave blank for solid black)..."
+                  value={formState.passcodeBgUrl === "solid-black" ? "" : (formState.passcodeBgUrl || "")}
+                  onChange={(e) => setFormState({ ...formState, passcodeBgUrl: e.target.value.trim() || "solid-black" })}
+                  className="w-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2.5 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400"
+                />
+                <div className="flex gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setFormState({ ...formState, passcodeBgUrl: "solid-black" })}
+                    className={`px-2 py-1 text-[10px] rounded-lg border transition-all ${
+                      (formState.passcodeBgUrl || "solid-black") === "solid-black" 
+                        ? "bg-rose-500 text-white border-transparent font-semibold" 
+                        : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                    }`}
+                  >
+                    Velvet Black
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormState({ ...formState, passcodeBgUrl: "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=1200" })}
+                    className={`px-2 py-1 text-[10px] rounded-lg border transition-all ${
+                      formState.passcodeBgUrl?.includes("photo-1506318137071") 
+                        ? "bg-rose-500 text-white border-transparent font-semibold" 
+                        : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                    }`}
+                  >
+                    Starry Night
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormState({ ...formState, passcodeBgUrl: "https://images.unsplash.com/photo-1579033461380-adb47c3eb938?auto=format&fit=crop&q=80&w=1200" })}
+                    className={`px-2 py-1 text-[10px] rounded-lg border transition-all ${
+                      formState.passcodeBgUrl?.includes("photo-15790334613") 
+                        ? "bg-rose-500 text-white border-transparent font-semibold" 
+                        : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                    }`}
+                  >
+                    Midnight Aurora
+                  </button>
+                </div>
+              </div>
+
+              {/* Lock Screen Text Color Customizer inside Creator */}
+              <div className="pt-3 border-t border-rose-100 dark:border-rose-900/30 space-y-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Lock Screen Text Color</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-800 flex-shrink-0"
+                    style={{ backgroundColor: formState.passcodeTextColor || "#ffffff" }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="#ffffff"
+                    value={formState.passcodeTextColor || "#ffffff"}
+                    onChange={(e) => setFormState({ ...formState, passcodeTextColor: e.target.value })}
+                    className="flex-grow border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white font-mono placeholder-slate-400 focus:outline-rose-500"
+                  />
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {[
+                    { name: "White", value: "#ffffff" },
+                    { name: "Pink", value: "#f472b6" },
+                    { name: "Gold", value: "#fbbf24" },
+                    { name: "Cyan", value: "#22d3ee" },
+                    { name: "Mint", value: "#34d399" },
+                    { name: "Lavender", value: "#c084fc" },
+                  ].map((tc) => (
+                    <button
+                      key={tc.name}
+                      type="button"
+                      onClick={() => setFormState({ ...formState, passcodeTextColor: tc.value })}
+                      className={`px-2 py-1 text-[10px] rounded-lg border transition-all ${
+                        (formState.passcodeTextColor || "#ffffff").toLowerCase() === tc.value.toLowerCase()
+                          ? "bg-rose-500 text-white border-transparent font-semibold" 
+                          : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                      }`}
+                    >
+                      {tc.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* AVATAR CHOOSER */}

@@ -304,6 +304,26 @@ app.get("/api/cards/:id", (req, res) => {
   }
 });
 
+// API endpoint to update specific fields of a card state by shortId
+app.patch("/api/cards/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    const cardState = cardsCache.get(id);
+    
+    if (!cardState) {
+      res.status(404).json({ error: "Birthday card not found" });
+      return;
+    }
+    
+    const updatedState = { ...cardState, ...req.body };
+    saveCardToDB(id, updatedState);
+    res.json(updatedState);
+  } catch (err: any) {
+    console.error("Error updating card in database:", err);
+    res.status(500).json({ error: "Failed to update card state" });
+  }
+});
+
 // Start integration with Vite middleware
 async function setupServer() {
   if (process.env.NODE_ENV !== "production") {
