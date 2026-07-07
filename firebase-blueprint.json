@@ -20,7 +20,11 @@
         "interests": { "type": "string" },
         "passcode": { "type": "string" },
         "passcodeBgUrl": { "type": "string" },
-        "passcodeTextColor": { "type": "string" }
+        "passcodeTextColor": { "type": "string" },
+        "pinterestOldPaperHeading": { "type": "string" },
+        "pinterestOldPaperContent": { "type": "string" },
+        "pinterestOldPaperFootnote": { "type": "string" },
+        "pinterestOldPaperPhoto": { "type": "string" }
       },
       "required": ["recipientName"]
     }

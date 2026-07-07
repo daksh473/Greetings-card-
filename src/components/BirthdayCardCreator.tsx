@@ -40,6 +40,10 @@ export default function BirthdayCardCreator() {
     pinterestFinalTitle: "happy birthday ♡",
     pinterestFinalLetter: "happy birthday once again. i hope this new chapter brings you so many cozy afternoons, sweet achievements, and gentle smiles. i'll always be here to support you, cheer for you, and celebrate all your happiest moments. have the most magical day ever!",
     passcode: "1234",
+    pinterestOldPaperHeading: "golden memories & parchment notes",
+    pinterestOldPaperContent: "like an ancient letter written under warm candlelight, some bonds are perfectly preserved across the turning seasons. thank you for being my constant anchor, the quiet warmth in a noisy world, and the partner in all my nostalgic memories. here's to another beautiful chapter together.",
+    pinterestOldPaperFootnote: "written in ink, sealed with quiet stardust.",
+    pinterestOldPaperPhoto: "",
 
     // Dear You default state
     isDearYou: false,
@@ -983,7 +987,7 @@ export default function BirthdayCardCreator() {
             <div className="flex items-center space-x-2 text-slate-800 dark:text-white font-extrabold pb-3 border-b border-dashed border-slate-100 dark:border-slate-800">
               <span className="text-sm bg-rose-50 text-rose-500 py-1 px-2 rounded">03</span>
               <h2 className="text-sm uppercase tracking-wider">
-                {formState.isDearYou ? "Review 'Dear You' 8-Step Content" : formState.isPinterestCard ? "Review Pinterest 5-Page Content" : "Review Card Letter Content"}
+                {formState.isDearYou ? "Review 'Dear You' 7-Step Content" : formState.isPinterestCard ? "Review Pinterest 6-Page Content" : "Review Card Letter Content"}
               </h2>
             </div>
 
@@ -992,7 +996,7 @@ export default function BirthdayCardCreator() {
                 /* DEAR YOU INTERACTIVE SCRAPBOOK FIELDS */
                 <div className="space-y-4">
                   <div className="p-4 bg-amber-50/40 dark:bg-amber-955/10 rounded-2xl border border-amber-100 dark:border-amber-900/30 space-y-4">
-                    <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-widest font-sans block">💌 Dear You Customizer (8-Step Scrapbook)</span>
+                    <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-widest font-sans block">💌 Dear You Customizer (7-Step Scrapbook)</span>
                     
                     {/* Step 1: Passcode */}
                     <div className="space-y-1.5 pt-2 border-t border-dashed border-amber-100 dark:border-amber-900/20">
@@ -1150,43 +1154,37 @@ export default function BirthdayCardCreator() {
                       </div>
                     </div>
 
-                    {/* Step 6: Handwritten Note */}
+                    {/* Step 6: Vintage Parchment Old Paper */}
                     <div className="space-y-2 pt-3 border-t border-dashed border-amber-100 dark:border-amber-900/20">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">✍️ A Handwritten Note Page</label>
-                      
-                      <div className="space-y-1">
-                        <span className="block text-[10px] text-slate-500 font-medium">Your Note Message</span>
-                        <textarea
-                          rows={3}
-                          value={formState.dearYouNoteText || ""}
-                          onChange={(e) => setFormState({ ...formState, dearYouNoteText: e.target.value })}
-                          className="w-full border border-slate-305 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 rounded-xl text-xs text-slate-800 dark:text-white leading-relaxed"
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">📜 Step 6: Vintage Parchment Paper</label>
+                      <div className="bg-amber-50/10 p-3 rounded-lg border border-amber-100/35 dark:border-slate-800 space-y-2">
+                        <label className="block text-[9px] font-medium text-slate-400">Parchment Heading</label>
+                        <input
+                          type="text"
+                          value={formState.pinterestOldPaperHeading || ""}
+                          onChange={(e) => setFormState({ ...formState, pinterestOldPaperHeading: e.target.value })}
+                          className="w-full border border-slate-205 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] mb-2 text-slate-800 dark:text-white font-serif"
                         />
-                      </div>
-
-                      <div className="space-y-1">
-                        <span className="block text-[10px] text-slate-500 font-medium">Note Accent Photo</span>
-                        <div className="flex items-center gap-3">
-                          <label className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 border border-dashed border-amber-300 hover:border-amber-500 bg-white hover:bg-amber-50/10 rounded-xl cursor-pointer transition-colors text-[10px] font-bold text-amber-700 dark:text-amber-400">
-                            <Upload className="w-3.5 h-3.5" />
-                            <span>Upload Photo</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleDearYouPhotoCompress(e, "dearYouNotePhoto")}
-                              className="hidden"
-                            />
-                          </label>
-                          {formState.dearYouNotePhoto && (
-                            <img src={formState.dearYouNotePhoto} className="w-10 h-10 object-cover rounded-lg border border-amber-200" />
-                          )}
-                        </div>
+                        <label className="block text-[9px] font-medium text-slate-400">Parchment Letter Content</label>
+                        <textarea
+                          rows={4}
+                          value={formState.pinterestOldPaperContent || ""}
+                          onChange={(e) => setFormState({ ...formState, pinterestOldPaperContent: e.target.value })}
+                          className="w-full border border-slate-205 bg-white dark:bg-slate-950 p-2 rounded text-[11px] leading-relaxed text-slate-800 dark:text-white font-serif"
+                        />
+                        <label className="block text-[9px] font-medium text-slate-400 mt-1.5">Parchment Footnote / Sign-off</label>
+                        <input
+                          type="text"
+                          value={formState.pinterestOldPaperFootnote || ""}
+                          onChange={(e) => setFormState({ ...formState, pinterestOldPaperFootnote: e.target.value })}
+                          className="w-full border border-slate-205 bg-white dark:bg-slate-950 p-1.5 rounded text-[10px] italic text-slate-800 dark:text-white font-serif"
+                        />
                       </div>
                     </div>
 
                     {/* Step 7: Sign Off */}
                     <div className="space-y-2.5 pt-3 border-t border-dashed border-amber-100 dark:border-amber-900/20">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">🖋️ Sign Off & Color</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">🖋️ Step 7: Sign Off & Color</label>
                       
                       <div className="space-y-1">
                         <span className="block text-[10px] text-slate-500 font-medium">Closing Line</span>
@@ -1538,6 +1536,34 @@ export default function BirthdayCardCreator() {
                           value={formState.pinterestFinalLetter}
                           onChange={(e) => setFormState({ ...formState, pinterestFinalLetter: e.target.value })}
                           className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-2 rounded text-[11px] leading-relaxed text-slate-800 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* PAGE 6: VINTAGE PARCHMENT OLD PAPER */}
+                    <div className="bg-rose-50/10 p-3 rounded-lg border border-rose-100/30 dark:border-slate-850 space-y-2">
+                      <span className="text-[10px] font-bold text-amber-500 font-mono flex items-center gap-1">📜 STEP 6: VINTAGE PARCHMENT PAPER</span>
+                      <div>
+                        <label className="block text-[9px] font-medium text-slate-400">Parchment Heading</label>
+                        <input
+                          type="text"
+                          value={formState.pinterestOldPaperHeading || ""}
+                          onChange={(e) => setFormState({ ...formState, pinterestOldPaperHeading: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[11px] mb-2 text-slate-800 dark:text-white"
+                        />
+                        <label className="block text-[9px] font-medium text-slate-400">Parchment Letter Content</label>
+                        <textarea
+                          rows={4}
+                          value={formState.pinterestOldPaperContent || ""}
+                          onChange={(e) => setFormState({ ...formState, pinterestOldPaperContent: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-2 rounded text-[11px] leading-relaxed text-slate-800 dark:text-white"
+                        />
+                        <label className="block text-[9px] font-medium text-slate-400 mt-1.5">Parchment Footnote / Sign-off</label>
+                        <input
+                          type="text"
+                          value={formState.pinterestOldPaperFootnote || ""}
+                          onChange={(e) => setFormState({ ...formState, pinterestOldPaperFootnote: e.target.value })}
+                          className="w-full border border-slate-200 bg-white dark:bg-slate-950 p-1.5 rounded text-[10px] italic text-slate-800 dark:text-white"
                         />
                       </div>
                     </div>

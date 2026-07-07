@@ -71,6 +71,12 @@ export interface BirthdayCardState {
   customBgType?: "color" | "image" | "video";
   customBgUrl?: string; // base64 or direct URL
   customBgOpacity?: number; // 0 to 100 for overlay opacity
+
+  // Page 6 Old Parchment Paper Customization
+  pinterestOldPaperHeading?: string;
+  pinterestOldPaperContent?: string;
+  pinterestOldPaperFootnote?: string;
+  pinterestOldPaperPhoto?: string;
 }
 
 export interface SuggestionParams {

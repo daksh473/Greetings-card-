@@ -428,9 +428,9 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     return (
       <motion.div
         key="lock-screen-immersive"
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.98 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         style={isSolidBlack ? {
           backgroundColor: "#000000",
           color: passcodeTextColor
@@ -440,11 +440,11 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
           backgroundPosition: "center",
           color: passcodeTextColor
         }}
-        className="absolute inset-0 w-full h-full flex flex-col justify-between p-6 font-sans overflow-hidden select-none z-30"
+        className="fixed inset-0 w-screen h-screen flex flex-col justify-between p-6 md:p-12 font-sans overflow-hidden select-none z-[100]"
       >
         {/* Subtle overlay over image for text readability */}
         {!isSolidBlack && (
-          <div className="absolute inset-0 bg-black/65 backdrop-blur-[3px] z-0 rounded-[28px]" />
+          <div className="absolute inset-0 bg-black/65 backdrop-blur-[3px] z-0" />
         )}
 
         {/* Customize Button - Prominent Glassmorphic Widget */}
@@ -1221,6 +1221,54 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
     });
   };
 
+  const triggerPartyBomber = () => {
+    synth.playSparkle();
+    setTimeout(() => {
+      synth.playCheer();
+    }, 150);
+
+    // Multi-burst party bomber confetti explosion!
+    confetti({
+      particleCount: 150,
+      spread: 90,
+      origin: { y: 0.6 },
+    });
+
+    setTimeout(() => {
+      confetti({
+        particleCount: 80,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.8 },
+      });
+    }, 150);
+
+    setTimeout(() => {
+      confetti({
+        particleCount: 80,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.8 },
+      });
+    }, 300);
+
+    const end = Date.now() + 2000;
+    const interval = setInterval(() => {
+      if (Date.now() > end) {
+        return clearInterval(interval);
+      }
+      confetti({
+        particleCount: 30,
+        startVelocity: 30,
+        spread: 360,
+        origin: {
+          x: Math.random(),
+          y: Math.random() - 0.2
+        }
+      });
+    }, 200);
+  };
+
   const restartCelebrate = () => {
     setCandlesBlown(false);
     setGiftDiscovered(false);
@@ -1382,6 +1430,10 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
 
   return (
     <div className={themeStyle.bg}>
+      <AnimatePresence>
+        {!envelopeOpened && envelopeTouched && renderLockScreen()}
+      </AnimatePresence>
+
       {/* Custom Background Video or Photo */}
       {state.customBgType && state.customBgType !== "color" && state.customBgUrl && (
         <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
@@ -1633,8 +1685,6 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </div>
                   </motion.div>
                 )}
-
-              {!envelopeOpened && envelopeTouched && renderLockScreen()}
 
               {envelopeOpened && dearYouStep === 1 && (
                     <motion.div
@@ -1893,29 +1943,91 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                       animate="animate"
                       exit="exit"
                       style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
-                      className="py-1 text-center flex flex-col items-center space-y-4"
+                      className="py-2 max-w-md mx-auto w-full select-none font-serif"
                     >
-
-                      {/* Notebook Paper layout */}
-                      <div className="w-full max-w-md bg-[#fffdf9] dark:bg-slate-950 p-6 md:p-8 rounded-2xl border border-dashed border-amber-300 dark:border-amber-900/50 shadow-md relative overflow-hidden text-left font-handwriting">
-                        {/* Notebook lines */}
-                        <div className="absolute top-0 bottom-0 left-8 w-[1px] bg-red-200/50" />
+                      {/* The Old Paper Sheet */}
+                      <div className="bg-[#f2ead3] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#f7f2e5] via-[#eddcb4] to-[#debfa0] text-[#4d3219] p-6 md:p-8 rounded-[4px] border-2 border-[#b5926c] shadow-[12px_12px_0px_rgba(77,50,25,0.15)] relative overflow-hidden">
                         
-                        <div className="pl-6 space-y-4">
-                          <span className="text-2xl">✍️</span>
-                          <p className="text-xs md:text-sm leading-loose whitespace-pre-wrap text-slate-800 dark:text-slate-350 italic">
-                            {state.dearYouNoteText || "Happy birthday to my favorite person. Grateful for every big adventure and every quiet walk we share. You deserve the entire world."}
-                          </p>
+                        {/* Subtle horizontal paper lines (vintage notebook/parchment style) */}
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,_transparent_1px)] bg-[size:100%_24px] pointer-events-none opacity-60 mt-12" />
+                        
+                        {/* Coffee stain visual effect - subtle overlay circles */}
+                        <div className="absolute -top-1 -left-10 w-32 h-32 bg-[#bf9d7a]/15 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-[#a87c53]/20 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute top-1/2 left-1/4 w-20 h-20 bg-[#a87c53]/10 rounded-full blur-xl pointer-events-none" />
+
+                        {/* Translucent tape on the corners for retro scrapbook feel */}
+                        <div className="absolute -top-1 -left-4 w-16 h-6 bg-[#fffdf5]/30 border border-[#eddcb4]/50 rotate-[-12deg] backdrop-blur-[0.5px] pointer-events-none shadow-xs" />
+                        <div className="absolute -top-1 -right-4 w-16 h-6 bg-[#fffdf5]/30 border border-[#eddcb4]/50 rotate-[15deg] backdrop-blur-[0.5px] pointer-events-none shadow-xs" />
+
+                        {/* Vintage cancelled post stamp or postal emblem */}
+                        <div className="absolute top-4 right-4 w-16 h-16 border-2 border-dashed border-[#8c6542]/50 rounded-full flex flex-col items-center justify-center rotate-12 select-none opacity-80 pointer-events-none font-mono">
+                          <span className="text-[6px] text-[#8c6542]/70 font-black tracking-wider leading-none">POSTE BELGE</span>
+                          <div className="w-10 h-[1px] bg-[#8c6542]/40 my-0.5" />
+                          <span className="text-[8px] text-[#8c6542] font-extrabold tracking-tight">1926-2026</span>
+                          <span className="text-[5px] text-[#8c6542]/60 uppercase tracking-widest mt-0.5">certified</span>
                         </div>
 
-                        {/* Small accent photo nested inside paper */}
-                        {state.dearYouNotePhoto && (
-                          <div className="mt-4 flex justify-end">
-                            <div className="bg-white p-1 pb-3 rounded-xs border border-slate-200 shadow-sm rotate-[3deg] max-w-[80px]">
-                              <img src={state.dearYouNotePhoto} className="w-16 h-16 object-cover rounded-xs" referrerPolicy="no-referrer" />
-                            </div>
+                        {/* Pressed Dried Lavender / Herb stem ornament */}
+                        <div className="absolute bottom-6 right-6 flex flex-col items-center rotate-[-10deg] opacity-90 select-none pointer-events-none">
+                          {/* A gorgeous realistic mini plant sticker with tape */}
+                          <span className="text-2xl leading-none">🌿</span>
+                          <div className="w-8 h-3 bg-white/25 border border-white/10 backdrop-blur-[0.5px] rotate-12 mt-[-6px]" />
+                        </div>
+
+                        {/* Left vertical margins line typical of old parchment/ruled paper */}
+                        <div className="absolute top-0 bottom-0 left-8 w-[2px] bg-red-800/20 pointer-events-none" />
+
+                        {/* Content Area with margin spacing */}
+                        <div className="pl-8 pt-4 pr-2 space-y-4 relative z-10 text-left">
+                          {/* Cute miniature letter badge */}
+                          <div className="inline-block border border-[#8c6542]/40 px-2 py-0.5 rounded-sm text-[8px] uppercase tracking-widest font-sans font-bold text-[#8c6542]/80 bg-white/30">
+                            Memoire No. 6
                           </div>
-                        )}
+
+                          {/* Title of the old paper */}
+                          <h4 className="text-lg md:text-xl font-bold font-serif text-[#4d3219] tracking-tight leading-tight pt-1">
+                            {state.pinterestOldPaperHeading || "golden memories & parchment notes"}
+                          </h4>
+
+                          {/* Heartfelt body written in beautiful signature ink */}
+                          <div className="font-handwriting text-xs md:text-sm leading-relaxed tracking-wide text-[#332211] space-y-3 min-h-[160px] whitespace-pre-wrap italic">
+                            {state.pinterestOldPaperContent || "like an ancient letter written under warm candlelight, some bonds are perfectly preserved across the turning seasons. thank you for being my constant anchor, the quiet warmth in a noisy world, and the partner in all my nostalgic memories. here's to another beautiful chapter together."}
+                          </div>
+
+                          {/* Optional custom memory photo frame inside the old paper */}
+                          {state.pinterestOldPaperPhoto ? (
+                            <div className="mt-4 flex justify-start">
+                              <div className="bg-[#fffcf5] p-1.5 pb-4 rounded-xs border border-[#d6c4a3] shadow-md rotate-[-2deg] max-w-[120px] relative">
+                                <img src={state.pinterestOldPaperPhoto} className="w-24 h-24 object-cover rounded-xs sepia-[0.25]" referrerPolicy="no-referrer" />
+                                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-10 h-3.5 bg-[#ffffff]/40 border border-white/10 rotate-[3deg] shadow-xs" />
+                              </div>
+                            </div>
+                          ) : state.uploadedPhotos && state.uploadedPhotos.length > 0 ? (
+                            /* If they didn't upload a step 7 specific photo, grab one of the uploaded memories and render it in a sepia tint! */
+                            <div className="mt-2 flex justify-start">
+                              <div className="bg-[#fffcf5] p-1.5 pb-4 rounded-xs border border-[#d6c4a3] shadow-md rotate-[-2deg] max-w-[110px] relative">
+                                <img src={state.uploadedPhotos[0]} className="w-20 h-20 object-cover rounded-xs sepia-[0.5] contrast-[0.9] brightness-[0.95]" referrerPolicy="no-referrer" />
+                                {/* Tape over photo */}
+                                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-white/30 border border-white/10 rotate-[5deg]" />
+                              </div>
+                            </div>
+                          ) : (
+                            /* Render a nostalgic stamp badge */
+                            <div className="pt-2">
+                              <div className="border border-dashed border-[#8c6542]/40 rounded-lg p-2.5 bg-white/10 text-[9px] text-[#6e4e2a] leading-relaxed max-w-xs italic flex items-center gap-2">
+                                <span className="text-lg">🕯️</span>
+                                <span>this document is locked in infinite friendship and affection.</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Parchment sign-off footnote */}
+                          <div className="pt-3 border-t border-[#8c6542]/20 flex justify-between items-center text-[10px]">
+                            <span className="font-mono text-[8px] text-[#8c6542]/70 uppercase tracking-widest">Aesthetic Archive</span>
+                            <span className="font-serif font-black italic text-[#8c6542]">{state.pinterestOldPaperFootnote || "written in ink, sealed with quiet stardust."}</span>
+                          </div>
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -1975,6 +2087,14 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                   className="px-3.5 py-1.5 text-xs text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100/60 rounded-lg font-bold border border-amber-100 disabled:opacity-40 cursor-pointer"
                 >
                   ← Back
+                </button>
+
+                <button
+                  type="button"
+                  onClick={triggerPartyBomber}
+                  className="px-3 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100/60 rounded-lg font-bold border border-rose-100 flex items-center gap-1 cursor-pointer shadow-xs transition-transform active:scale-95"
+                >
+                  <span>Celebrate! 🎉</span>
                 </button>
 
                 {dearYouStep < 7 ? (
@@ -2061,8 +2181,6 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </div>
                   </motion.div>
                 )}
-
-              {!envelopeOpened && envelopeTouched && renderLockScreen()}
 
               {envelopeOpened && pinterestPage === 1 && (
                   <motion.div
@@ -2481,6 +2599,104 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                     </div>
                   </motion.div>
                 )}
+
+                {envelopeOpened && pinterestPage === 6 && (
+                  <motion.div
+                    key="p6"
+                    custom={navigationDirection}
+                    variants={bookFlipVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    style={{ transformOrigin: "left center", backfaceVisibility: "hidden" }}
+                    className="py-2 max-w-md mx-auto w-full select-none"
+                  >
+                    {/* The Old Paper Sheet */}
+                    <div className="bg-[#f2ead3] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#f7f2e5] via-[#eddcb4] to-[#debfa0] text-[#4d3219] p-6 md:p-8 rounded-[4px] border-2 border-[#b5926c] shadow-[12px_12px_0px_rgba(77,50,25,0.15)] relative overflow-hidden font-serif">
+                      
+                      {/* Subtle horizontal paper lines (vintage notebook/parchment style) */}
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,_transparent_1px)] bg-[size:100%_24px] pointer-events-none opacity-60 mt-12" />
+                      
+                      {/* Coffee stain visual effect - subtle overlay circles */}
+                      <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#bf9d7a]/15 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-[#a87c53]/20 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute top-1/2 left-1/4 w-20 h-20 bg-[#a87c53]/10 rounded-full blur-xl pointer-events-none" />
+
+                      {/* Translucent tape on the corners for retro scrapbook feel */}
+                      <div className="absolute -top-1 -left-4 w-16 h-6 bg-[#fffdf5]/30 border border-[#eddcb4]/50 rotate-[-12deg] backdrop-blur-[0.5px] pointer-events-none shadow-xs" />
+                      <div className="absolute -top-1 -right-4 w-16 h-6 bg-[#fffdf5]/30 border border-[#eddcb4]/50 rotate-[15deg] backdrop-blur-[0.5px] pointer-events-none shadow-xs" />
+
+                      {/* Vintage cancelled post stamp or postal emblem */}
+                      <div className="absolute top-4 right-4 w-16 h-16 border-2 border-dashed border-[#8c6542]/50 rounded-full flex flex-col items-center justify-center rotate-12 select-none opacity-80 pointer-events-none font-mono">
+                        <span className="text-[6px] text-[#8c6542]/70 font-black tracking-wider leading-none">POSTE BELGE</span>
+                        <div className="w-10 h-[1px] bg-[#8c6542]/40 my-0.5" />
+                        <span className="text-[8px] text-[#8c6542] font-extrabold tracking-tight">1926-2026</span>
+                        <span className="text-[5px] text-[#8c6542]/60 uppercase tracking-widest mt-0.5">certified</span>
+                      </div>
+
+                      {/* Pressed Dried Lavender / Herb stem ornament */}
+                      <div className="absolute bottom-6 right-6 flex flex-col items-center rotate-[-10deg] opacity-90 select-none pointer-events-none">
+                        {/* A gorgeous realistic mini plant sticker with tape */}
+                        <span className="text-2xl leading-none">🌿</span>
+                        <div className="w-8 h-3 bg-white/25 border border-white/10 backdrop-blur-[0.5px] rotate-12 mt-[-6px]" />
+                      </div>
+
+                      {/* Left vertical margins line typical of old parchment/ruled paper */}
+                      <div className="absolute top-0 bottom-0 left-8 w-[2px] bg-red-800/20 pointer-events-none" />
+
+                      {/* Content Area with margin spacing */}
+                      <div className="pl-8 pt-4 pr-2 space-y-4 relative z-10 text-left">
+                        {/* Cute miniature letter badge */}
+                        <div className="inline-block border border-[#8c6542]/40 px-2 py-0.5 rounded-sm text-[8px] uppercase tracking-widest font-sans font-bold text-[#8c6542]/80 bg-white/30">
+                          Memoire No. 6
+                        </div>
+
+                        {/* Title of the old paper */}
+                        <h4 className="text-lg md:text-xl font-bold font-serif text-[#4d3219] tracking-tight leading-tight pt-1">
+                          {state.pinterestOldPaperHeading || "golden memories & parchment notes"}
+                        </h4>
+
+                        {/* Heartfelt body written in beautiful signature ink */}
+                        <div className="font-handwriting text-xs md:text-sm leading-relaxed tracking-wide text-[#332211] space-y-3 min-h-[160px] whitespace-pre-wrap italic">
+                          {state.pinterestOldPaperContent || "like an ancient letter written under warm candlelight, some bonds are perfectly preserved across the turning seasons. thank you for being my constant anchor, the quiet warmth in a noisy world, and the partner in all my nostalgic memories. here's to another beautiful chapter together."}
+                        </div>
+
+                        {/* Optional custom memory photo frame inside the old paper */}
+                        {state.pinterestOldPaperPhoto ? (
+                          <div className="mt-4 flex justify-start">
+                            <div className="bg-[#fffcf5] p-1.5 pb-4 rounded-xs border border-[#d6c4a3] shadow-md rotate-[-2deg] max-w-[120px] relative">
+                              <img src={state.pinterestOldPaperPhoto} className="w-24 h-24 object-cover rounded-xs sepia-[0.25]" referrerPolicy="no-referrer" />
+                              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-10 h-3.5 bg-[#ffffff]/40 border border-[#eddcb4]/50 rotate-[3deg] shadow-xs" />
+                            </div>
+                          </div>
+                        ) : state.uploadedPhotos && state.uploadedPhotos.length > 0 ? (
+                          /* If they didn't upload a step 6 specific photo, grab one of the uploaded memories and render it in a sepia tint! */
+                          <div className="mt-2 flex justify-start">
+                            <div className="bg-[#fffcf5] p-1.5 pb-4 rounded-xs border border-[#d6c4a3] shadow-md rotate-[-2deg] max-w-[110px] relative">
+                              <img src={state.uploadedPhotos[0]} className="w-20 h-20 object-cover rounded-xs sepia-[0.5] contrast-[0.9] brightness-[0.95]" referrerPolicy="no-referrer" />
+                              {/* Tape over photo */}
+                              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-white/30 border border-white/10 rotate-[5deg]" />
+                            </div>
+                          </div>
+                        ) : (
+                          /* Render a nostalgic stamp badge */
+                          <div className="pt-2">
+                            <div className="border border-dashed border-[#8c6542]/40 rounded-lg p-2.5 bg-white/10 text-[9px] text-[#6e4e2a] leading-relaxed max-w-xs italic flex items-center gap-2">
+                              <span className="text-lg">🕯️</span>
+                              <span>this document is locked in infinite friendship and affection.</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Parchment sign-off footnote */}
+                        <div className="pt-3 border-t border-[#8c6542]/20 flex justify-between items-center text-[10px]">
+                          <span className="font-mono text-[8px] text-[#8c6542]/70 uppercase tracking-widest">Aesthetic Archive</span>
+                          <span className="font-serif font-black italic text-[#8c6542]">{state.pinterestOldPaperFootnote || "written in ink, sealed with quiet stardust."}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
 
           {/* CARD DECK PAGINATION CONTROLS */}
@@ -2498,7 +2714,15 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
                 ← Back
               </button>
 
-              {pinterestPage < 5 ? (
+              <button
+                type="button"
+                onClick={triggerPartyBomber}
+                className="px-3 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100/60 rounded-lg font-bold border border-rose-100 flex items-center gap-1 cursor-pointer shadow-xs transition-transform active:scale-95"
+              >
+                <span>Celebrate! 🎉</span>
+              </button>
+
+              {pinterestPage < 6 ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -2529,7 +2753,7 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
         </motion.div>
 
         {/* RETRY / RESET CELEBRATION CONTROL */}
-        {envelopeOpened && pinterestPage === 5 && (
+        {envelopeOpened && pinterestPage === 6 && (
           <div className="text-center mt-6">
             <button
               onClick={restartCelebrate}
@@ -2684,11 +2908,20 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
             </div>
 
             {/* RETRY / RESET CELEBRATION CONTROL */}
-            <div className="text-center mt-8">
+            <div className="text-center mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={triggerPartyBomber}
+                className="rounded-full px-6 py-2.5 text-xs flex items-center space-x-2 justify-center bg-rose-500 hover:bg-rose-600 text-white font-black shadow-md cursor-pointer transition-transform active:scale-95 border-0 animate-bounce"
+              >
+                <Sparkles className="w-4 h-4 fill-white text-white" />
+                <span>Celebrate! 🎉</span>
+              </button>
+
               <button
                 type="button"
                 onClick={restartCelebrate}
-                className={`rounded-full px-5 py-2 text-xs flex items-center space-x-2 mx-auto justify-center border transition-all ${themeStyle.secondaryButton}`}
+                className={`rounded-full px-5 py-2 text-xs flex items-center space-x-2 justify-center border transition-all cursor-pointer ${themeStyle.secondaryButton}`}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>{isInteractivePreview ? "Reset Interactive Preview" : "Play Surprises Again"}</span>
@@ -2773,6 +3006,16 @@ export default function BirthdayCardViewer({ state, isInteractivePreview = false
               </div>
             </div>
           )}
+
+          {/* Persistent Celebrate Button */}
+          <button
+            type="button"
+            onClick={triggerPartyBomber}
+            className="w-full mt-2 py-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 hover:scale-[1.02] active:scale-[0.98] text-white rounded-xl cursor-pointer border-2 border-[#4c0519] transition-all text-xs font-black flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_#4c0519] font-sans"
+          >
+            <Sparkles className="w-3.5 h-3.5 fill-white text-white animate-pulse" />
+            <span>Celebrate! 🎉</span>
+          </button>
         </div>
       )}
     </div>
